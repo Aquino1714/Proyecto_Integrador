@@ -4,7 +4,7 @@ from models.usuario import Usuario
 
 class UsuarioDAO:
 
-    def obtener_usuarios(self):
+    def obtener_todos(self):
 
         conexion = Conexion.obtener_conexion()
         cursor = conexion.cursor()
@@ -31,3 +31,87 @@ class UsuarioDAO:
         conexion.close()
 
         return lista_usuarios
+
+
+    
+
+    def insertar(self, usuario):
+
+        conexion = Conexion.obtener_conexion()
+        cursor = conexion.cursor()
+
+        sql = """
+        INSERT INTO usuario
+        (
+            empleado_id,
+            username,
+            password,
+            estado
+        )
+        VALUES (%s, %s, %s, %s)
+        """
+
+        cursor.execute(
+            sql,
+            (
+                usuario.empleado_id,
+                usuario.username,
+                usuario.password,
+                usuario.estado
+            )
+        )
+
+        conexion.commit()
+
+        cursor.close()
+        conexion.close()
+
+
+
+    def actualizar(self, usuario):
+
+        conexion = Conexion.obtener_conexion()
+        cursor = conexion.cursor()
+
+        sql = """
+        UPDATE usuario
+        SET
+            empleado_id = %s,
+            username = %s,
+            password = %s,
+            estado = %s
+        WHERE usuario_id = %s
+        """
+
+        cursor.execute(
+            sql,
+            (
+                usuario.empleado_id,
+                usuario.username,
+                usuario.password,
+                usuario.estado,
+                usuario.usuario_id
+            )
+        )
+
+        conexion.commit()
+
+        cursor.close()
+        conexion.close()
+
+
+
+    def eliminar(self, usuario_id):
+
+        conexion = Conexion.obtener_conexion()
+        cursor = conexion.cursor()
+
+        cursor.execute(
+            "DELETE FROM usuario WHERE usuario_id = %s",
+            (usuario_id,)
+        )
+
+        conexion.commit()
+
+        cursor.close()
+        conexion.close()

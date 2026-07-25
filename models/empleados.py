@@ -1,21 +1,6 @@
 class Empleado:
 
-    def __init__(
-        self,
-        empleado_id,
-        nombre,
-        apellido_paterno,
-        apellido_materno,
-        correo,
-        telefono,
-        password,
-        activo,
-        fecha_registro,
-        fecha_baja,
-        motivo_baja,
-        id_rol,
-        rol=None
-    ):
+    def __init__(self,empleado_id,nombre,apellido_paterno,apellido_materno,correo,telefono,password,activo,fecha_registro,fecha_baja,motivo_baja,id_rol,rol=None):
 
         self.empleado_id = empleado_id
         self.nombre = nombre

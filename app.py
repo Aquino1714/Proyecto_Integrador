@@ -2,6 +2,7 @@ from dao.rol_dao import RolDAO
 from dao.empleado_dao import EmpleadoDAO
 from models.empleados import Empleado
 from dao.usuario_dao import UsuarioDAO
+from models.usuario import Usuario
 
 
 # ==========================================
@@ -64,7 +65,7 @@ def ver_empleados():
 
         else:
             for empleado in empleados:
-                print("========================")
+                print("==================")
                 print(
                     f"ID: {empleado.empleado_id}, "
                     f"Nombre: {empleado.nombre} {empleado.apellido_paterno} {empleado.apellido_materno}, "
@@ -215,25 +216,169 @@ def menu_empleados():
 
 #usuarios
 
+def ver_usuarios():
+
+    try:
+
+        usuario_dao = UsuarioDAO()
+
+        usuarios = usuario_dao.obtener_todos()
+
+        print("===== USUARIOS =====")
+
+        if len(usuarios) == 0:
+
+            print("No hay usuarios registrados.")
+
+        else:
+
+            for usuario in usuarios:
+
+                print("========================")
+                print(
+                    f"ID: {usuario.usuario_id}, "
+                    f"Empleado ID: {usuario.empleado_id}, "
+                    f"Usuario: {usuario.username}, "
+                    f"Contraseña: {usuario.password}, "
+                    f"Estado: {'Activo' if usuario.estado else 'Inactivo'}"
+                )
+                print("========================")
+
+    except Exception as e:
+
+        print("Error:")
+        print(e)
 
 
+# ==========================================
 
+def insertar_usuario():
+
+    empleado_id = int(input("ID del empleado: "))
+    username = input("Nombre de usuario: ")
+    password = input("Contraseña: ")
+    estado = True
+
+    try:
+
+        usuario_dao = UsuarioDAO()
+
+        usuario = Usuario(
+
+            usuario_id=None,
+            empleado_id=empleado_id,
+            username=username,
+            password=password,
+            estado=estado
+
+        )
+
+        usuario_dao.insertar(usuario)
+
+        print("Usuario registrado correctamente.")
+
+    except Exception as e:
+
+        print("Error al insertar usuario")
+        print(e)
+
+
+# ==========================================
+
+def actualizar_usuario():
+
+    try:
+
+        usuario_dao = UsuarioDAO()
+
+        usuarios = usuario_dao.obtener_todos()
+
+        usuario_id = int(input("ID del usuario a actualizar: "))
+        empleado_id = int(input("Nuevo ID del empleado: "))
+        username = input("Nuevo nombre de usuario: ")
+        password = input("Nueva contraseña: ")
+        estado = input("¿Activo? (si/no): ").lower() == "si"
+
+        usuario = Usuario(
+
+            usuario_id=usuario_id,
+            empleado_id=empleado_id,
+            username=username,
+            password=password,
+            estado=estado
+
+        )
+
+        usuario_dao.actualizar(usuario)
+
+        print("usuario actualizado correctamente.")
+
+    except Exception as e:
+
+        print("error al actualizar usuario")
+        print(e)
+
+
+# ==========================================
+
+def eliminar_usuario():
+
+    try:
+
+        usuario_dao = UsuarioDAO()
+
+        ver_usuarios()
+
+        usuario_id = int(input("ID del usuario a eliminar: "))
+
+        usuario_dao.eliminar(usuario_id)
+
+        print("Usuario eliminado correctamente.")
+
+    except Exception as e:
+
+        print("Error al eliminar usuario")
+        print(e)
+
+
+# ==========================================
 
 def menu_usuarios():
 
-    usuario_dao = UsuarioDAO()
-
-    usuarios = usuario_dao.obtener_usuarios()
-
     print("===== USUARIOS =====")
+    print("1. Ver usuarios")
+    print("2. Insertar usuario")
+    print("3. Actualizar usuario")
+    print("4. Eliminar usuario")
 
-    for usuario in usuarios:
+    opcion = int(input("Selecciona una opción: "))
 
-        print(f"ID: {usuario.usuario_id}")
-        print(f"Empleado: {usuario.empleado_id}")
-        print(f"Usuario: {usuario.username}")
-        print(f"Estado: {usuario.estado}")
-        print("-------------------")
+    match opcion:
+
+        case 1:
+            ver_usuarios()
+
+        case 2:
+            insertar_usuario()
+
+        case 3:
+            actualizar_usuario()
+
+        case 4:
+            eliminar_usuario()
+
+        case _:
+            print("Opción no válida.")
+
+    
+
+
+
+
+    
+
+
+        
 
 
 #=========================================================================
