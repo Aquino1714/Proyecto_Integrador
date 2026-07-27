@@ -12,7 +12,7 @@ class Security:
 
     @staticmethod
 
-    def verify_passwor (password_plane: str, password_hash: str) -> bool:
+    def verify_password (password_plane: str, password_hash: str) -> bool:
 
         password_bytes = password_plane.encode("utf-8")
         hash_bytes = password_hash.encode("utf-8")

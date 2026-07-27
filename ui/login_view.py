@@ -1,13 +1,12 @@
 from dao.user_dao import UserDAO
 from models.user import User
+from dao.empleado_dao import EmpleadoDAO
 import hashlib
 
 
 import flet as ft
 
-# ==========================================
-# PALETA DE COLORES (Neusomic)
-# ==========================================
+
 COLOR_AZUL_OXFORD = "#001F4E"
 COLOR_AZUL_COBALTO = "#0A2F8F"
 COLOR_AZUL_MEDIO = "#1E88E5"
@@ -16,7 +15,6 @@ COLOR_GRIS_OSCURO = "#333333"
 COLOR_BLANCO = "#FFFFFF"
 COLOR_AZUL_CIELO_INTENSO = "#E0FFFF"
 
-# Fondo translúcido con efecto mica blur
 AERO_BG = "rgba(255,255,255,0.55)"
 AERO_BORDER = ft.Border(
     top=ft.BorderSide(1, "rgba(255,255,255,0.35)"),
@@ -25,17 +23,28 @@ AERO_BORDER = ft.Border(
     bottom=ft.BorderSide(1, "rgba(0,0,0,0.25)")
 )
 
-def login_view(page: ft.Page):
-    page.title = "Neusomic - Sistema de Acceso"
-    page.theme_mode = ft.ThemeMode.DARK
-    page.fonts = {
-        "Manrope": "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap"
-    }
-    page.theme = ft.Theme(font_family="Manrope")
-    page.padding = 0
-    page.spacing = 0
+#Roles identificador
+RUTAS_POR_ROL_EMPLEADO = {
+    1: "/dashboard_admin",
+    2: "/dashboard_chofer",
+    3: "/dashboard_recepcion",
+    4: "/dashboard_almacen",
+    5: "/dashboard_trituracion",
+    6: "/dashboard_distribucion",
+}
+def resolver_ruta_empleado(id_rol):
+    return RUTAS_POR_ROL_EMPLEADO.get(id_rol)
 
-    # Estado de pestaña activa
+
+RUTA_DASHBOARD_USUARIO = "ui.user.dashboard_user"
+
+
+def login_view(page: ft.Page) -> ft.View:
+    empleado_dao = EmpleadoDAO()
+    user_dao = UserDAO()
+
+
+
     current_tab = 0
 
     # ------------------------------------------
@@ -62,7 +71,7 @@ def login_view(page: ft.Page):
         )
 
     # Campos Login
-    txt_login_user = build_textfield("Usuario", "usuario01", ft.Icons.PERSON_OUTLINED)
+    txt_login_user = build_textfield("Usuario", "usuario01@example.com", ft.Icons.PERSON_OUTLINED)
     txt_login_pass = build_textfield("Contraseña", "********", ft.Icons.LOCK_OUTLINED, is_password=True)
 
     # Campos Restablecer
@@ -85,14 +94,71 @@ def login_view(page: ft.Page):
     # ------------------------------------------
     # EVENTOS
     # ------------------------------------------
-    def handle_login(e):
-        user = txt_login_user.value
+    async def handle_login(e):
+        identificador = txt_login_user.value
         pwd = txt_login_pass.value
-        if user and pwd:
-            page.open(ft.SnackBar(ft.Text(f"Iniciando sesión como: {user}..."), bgcolor=COLOR_AZUL_COBALTO))
-        else:
-            page.open(ft.SnackBar(ft.Text("Por favor complete todos los campos"), bgcolor="#B81D24"))
+        if not identificador or not pwd:
+            page.snack_bar = ft.SnackBar(
+                content=ft.Text("Por favor complete todos los campos"),
+                bgcolor="#B81D24"
+            )
+            page.snack_bar.open = True
+            page.update()
+            return
+        try:
+            empleado = empleado_dao.verify_login(identificador, pwd)
+        except Exception as ex:
+            print("ERROR LOGIN EMPLEADO:", ex)
 
+            page.snack_bar = ft.SnackBar(
+                content=ft.Text(str(ex)),
+                bgcolor="#B81D24"
+            )
+            page.snack_bar.open = True
+            page.update()
+            return
+
+        if empleado is not None:
+            ruta_destino = resolver_ruta_empleado(empleado.id_rol)
+            page.snack_bar = ft.SnackBar(
+                content=ft.Text(f"Bienvenido, {empleado.name}"),
+                bgcolor="#B81D24"
+            )
+            page.snack_bar.open = True
+            page.update()
+
+            await page.push_route(ruta_destino)
+            return
+
+        try:
+            user = user_dao.verify_login(identificador, pwd)
+        except Exception as ex:
+            page.snack_bar = ft.SnackBar(
+                content=ft.Text(f"Error: {ex}"),
+                bgcolor="#B81D24"
+            )
+            page.snack_bar.open = True
+            page.update()
+            return
+
+        if user is not None:
+            page.snack_bar = ft.SnackBar(
+                content=ft.Text(f"Bienvenido, {user.name}"),
+                bgcolor=COLOR_AZUL_COBALTO
+            )
+            page.snack_bar.open = True
+            page.update()
+
+            await page.push_route(RUTA_DASHBOARD_USUARIO)
+            return
+
+        #Por si alguno de los dos no funciona
+        page.snack_bar = ft.SnackBar(
+            content=ft.Text("Usuario o contraseña incorrectos"),
+            bgcolor="#B81D24"
+        )
+        page.snack_bar.open = True
+        page.update()
     def handle_reset(e):
         email = txt_reset_email.value
         if email:
@@ -408,16 +474,23 @@ def login_view(page: ft.Page):
     )
 
     # Layout final responsive
-    page.add(
-        ft.Column(
-            controls=[header, center_body, footer],
-            expand=True,
-            spacing=0
-        )
+    switch_tab(0)
+
+    return ft.View(
+        route="/",
+        controls=[
+            ft.Column(
+                controls=[header, center_body, footer],
+                expand=True,
+                spacing=0
+            )
+        ],
+        padding=0,
+        spacing=0
     )
 
     # Vista por defecto
-    switch_tab(0)
+    #switch_tab(0)
 
 
 #ft.run(main)

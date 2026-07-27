@@ -8,9 +8,9 @@ class EmpleadoDAO:
     def get_all(self):
 
         conn = Connect.get_connect()
-        cursor = conn.Cursor()
+        cursor = conn.cursor()
 
-        cursor.execute("SELECT * FROM empleado")
+        cursor.execute("SELECT * FROM empleados")
         registers = cursor.fetchall()
 
         empleados = []
@@ -43,7 +43,7 @@ class EmpleadoDAO:
         conn = Connect.get_connec()
         cursor = conn.cursor()
 
-        cursor.execute("SELECT * FROM empleados WHERE empleado_id = %s", (empleado_id))
+        cursor.execute("SELECT * FROM empleados WHERE empleado_id = %s", (empleado_id,))
         register = cursor.fetchone()
 
         cursor.close()
@@ -73,13 +73,13 @@ class EmpleadoDAO:
         conn = Connect.get_connec()
         cursor = conn.cursor()
 
-        cursor.execute("SELECT * FROM empleados WHERE email = %s", (email))
+        cursor.execute("SELECT * FROM empleados WHERE correo = %s", (email,))
         register = cursor.fetchone()
 
         cursor.close()
         conn.close()
 
-        if register in None:
+        if register is None:
             return None
 
         return Empleado (
@@ -170,7 +170,7 @@ class EmpleadoDAO:
         conn = Connect.get_connec()
         cursor = conn.cursor()
 
-        cursor.execute("DELETE FROM empleados WHERE empleado_id = %s", (empleado_id))
+        cursor.execute("DELETE FROM empleados WHERE empleado_id = %s", (empleado_id,))
 
         conn.commit()
         cursor.close()
@@ -215,7 +215,7 @@ class EmpleadoDAO:
         if not empleado.active:
             return None
 
-        if Security.verify_passwor(password_plane, empleado.password_hash):
+        if Security.verify_password(password_plane, empleado.password_hash):
             return empleado
 
         return None
