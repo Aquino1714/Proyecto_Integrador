@@ -1,4 +1,8 @@
 import flet as ft
-from ui.login_view import main
 
-ft.run(main)
+from dotenv import load_dotenv
+from ui.login_view import login_view
+
+
+if __name__ == "__main__":
+    ft.run(login_view)
