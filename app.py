@@ -8,6 +8,9 @@ from models.usuario import Usuario
 from dao.cliente_dao import ClienteDAO
 from models.clientes import Cliente
 
+from dao.transporte_dao import TransporteDAO
+from models.transportes import Transporte
+
 
 # ==========================================
 
@@ -540,17 +543,180 @@ def menu_clientes():
 
 
 
-
-
-
-
-    
-
-
-
-
-
 #================================
+#Trnportes
+
+def ver_transportes():
+
+    try:
+        transporte_dao = TransporteDAO()
+
+        transportes = transporte_dao.obtener_todos()
+        
+        print ("===Transpotes===")
+
+        if len (transportes) == 0:
+            print("No hay transportes")
+
+        else:
+            for transporte in transportes:
+                print("==============")
+                print(
+                    f"Transporte ID: {transporte.transporte_id},"
+                    f"Numero de placas: {transporte.placas},"
+                    f"Marca de vehiculo:{transporte.marca},"
+                    f"Modelo: {transporte.modelo},"
+                    f"Capacidad de carga:{transporte.capacidad_carga_kg},"
+                    f"Estado: {transporte.estado},"
+                    f"Activo: {'Si' if transporte.activo else 'No'},"
+                    f"Fecha de registro : {transporte.fecha_registro},"
+                )
+                print ("=============================")
+
+        print("\nConexión exitosa a la base de datos")
+
+    except Exception as e:
+        print("Error:")
+        print(e)
+
+
+def insertar_transporte():
+
+    placas = input("Placas del vehículo: ")
+    marca = input("Marca del vehículo: ")
+    modelo = input("Modelo del vehículo: ")
+    capacidad_carga_kg = int(input("Capacidad de carga del vehículo (kg): "))
+    estado = input("Estado del vehículo: ")
+    activo = True
+
+    try:
+
+        transporte_dao = TransporteDAO()
+
+        transporte = Transporte(
+
+            transporte_id=None,
+            placas=placas,
+            marca=marca,
+            modelo=modelo,
+            capacidad_carga_kg=capacidad_carga_kg,
+            estado=estado,
+            activo=activo,
+            fecha_registro=None,
+            fecha_baja=None,
+            motivo_baja=None
+
+        )
+
+        transporte_dao.insertar(transporte)
+
+        print("Transporte registrado correctamente.")
+
+    except Exception as e:
+
+        print("Error al insertar transporte")
+        print(e)
+
+
+def actualizar_transporte():
+
+    try:
+        transporte_dao = TransporteDAO()
+
+        ver_transportes()
+
+
+        transporte_id = int (input("ID del tranporte a actualizar:"))
+        placas = input("Placas del vehiculo:")
+        marca =  input("Marca del vehiculo:")
+        modelo =  input ("Modeo del vehiculo:")
+        capacidad_carga_kg = input("Capacdad de carga del vehiculo:")
+        estado = input ("Estado del ehiculo:")
+        activo = input("¿Activo? (si/no): ").lower () == "si"
+
+        transporte = Transporte( 
+                transporte_id = transporte_id,
+                placas = placas,
+                marca = marca,
+                modelo = modelo,
+                capacidad_carga_kg = capacidad_carga_kg,
+                estado = estado,
+                activo = activo ,
+                fecha_registro = None,
+                fecha_baja = None,
+                motivo_baja = None 
+        ) 
+
+        transporte_dao.actualizar(transporte)
+
+        print("Transporte actalizado corectamente.")
+
+    except Exception as e:
+        print("Error al actualizar empleado")
+        print(e)
+
+
+def eliminar_transporte():
+
+    try:
+        transporte_dao = TransporteDAO()
+
+        ver_transportes()
+
+        transporte_id = int (input("ID del transporte  elimina:"))
+
+        transporte_dao.eliminar(transporte_id)
+
+        print("Transporte eliminar correctamente.")
+
+    except Exception as e:
+        print("Error al eliminar transporte")
+        print(e)
+
+
+def menu_transportes():
+
+    print("===Transpotes===")
+    print("1. Ver tansportes")
+    print("2. Insertar transporte")
+    print("3. Actualizar tranporte")
+    print("4. Eliminar transpote")
+
+    opcion = int(input("Selecciona una opción: "))
+
+    match opcion:
+
+        case 1:
+            ver_transportes()
+
+        case 2:
+            insertar_transporte()
+
+        case 3:
+            actualizar_transporte()
+
+        case 4:
+            eliminar_transporte()
+
+        case _:
+            print("Opción no válida.")
+
+#============================================
+
+
+
+
+
+
+        
+        
+
+
+
+
+
+
+
 
 def main():
 
@@ -560,10 +726,11 @@ def main():
     print("2. Gestión de Emleados")
     print("3. Gestión de usuarios")
     print("4. Gestión de clienes")
+    print("5. Gestión de Transportes")
 
     try:
 
-        opcion = int(input("Selecciona una opción general (1-4): "))
+        opcion = int(input("Selecciona una opción general (1-5: "))
 
         match opcion:
 
@@ -578,6 +745,9 @@ def main():
 
             case 4:
                 menu_clientes()
+
+            case 5:
+                menu_transportes()
 
             case _:
                 print("Opción no valida.")
