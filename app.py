@@ -3,6 +3,8 @@ import flet as ft
 from ui.login_view import login_view
 from ui.admin.dashboard_admin import dashboard_admin
 from ui.admin.empleados_admin import empleados_admin
+from ui.admin.monitorTransporte_admin import monitor_transporte
+
 
 
 async def main(page: ft.Page):
@@ -24,7 +26,6 @@ async def main(page: ft.Page):
     # Navegación entre vistas
     async def navigate(route):
         await page.push_route(route)
-
 
     def route_change(e):
 
@@ -57,8 +58,16 @@ async def main(page: ft.Page):
             )
 
 
-        page.update()
+        elif page.route == "/neumaticos":
 
+            page.views.append(
+                monitor_transporte(
+                    page,
+                    on_navigate=navigate
+                )
+            )
+
+        page.update()
 
     def view_pop(e):
 

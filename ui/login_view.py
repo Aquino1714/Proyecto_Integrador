@@ -2,6 +2,7 @@ from dao.user_dao import UserDAO
 from models.user import User
 from dao.empleado_dao import EmpleadoDAO
 import hashlib
+import asyncio
 
 
 import flet as ft
@@ -38,11 +39,9 @@ def resolver_ruta_empleado(id_rol):
 
 RUTA_DASHBOARD_USUARIO = "ui.user.dashboard_user"
 
-
 def login_view(page: ft.Page) -> ft.View:
     empleado_dao = EmpleadoDAO()
     user_dao = UserDAO()
-
 
 
     current_tab = 0
@@ -89,7 +88,100 @@ def login_view(page: ft.Page) -> ft.View:
     txt_reg_confirm = build_textfield("Confirmar contraseña", "********", ft.Icons.LOCK_OUTLINED, is_password=True)
 
     form_container = ft.Column(spacing=15, horizontal_alignment=ft.CrossAxisAlignment.CENTER)
+
     title_text = ft.Text(size=24, weight=ft.FontWeight.BOLD, color=COLOR_BLANCO, text_align=ft.TextAlign.CENTER)
+    # ------------------------------------------
+    # NOTIFICACIONES FLOTANTES FLET 0.86.2
+    # ------------------------------------------
+
+    notification_layer = ft.Stack(
+        controls=[],
+        expand=True
+    )
+
+    async def mostrar_notificacion(mensaje, tipo="normal"):
+
+        if tipo == "error":
+            bgcolor = "#B91C1C"
+            icon = ft.Icons.ERROR
+
+
+        elif tipo == "warning":
+            bgcolor = COLOR_NARANJA_AMBAR
+            icon = ft.Icons.WARNING_AMBER_ROUNDED
+
+        else:
+            bgcolor = "#111111"
+            icon = ft.Icons.INFO_OUTLINE
+
+        toast = ft.Container(
+            width=350,
+            padding=15,
+            bgcolor=bgcolor,
+            border_radius=12,
+
+            opacity=0,
+            offset=ft.Offset(0, 0.5),
+
+            shadow=ft.BoxShadow(
+                blur_radius=18,
+                spread_radius=2,
+                color="#55000000",
+                offset=ft.Offset(0, 5)
+            ),
+
+            animate_opacity=300,
+            animate_offset=300,
+
+            content=ft.Row(
+                controls=[
+                    ft.Icon(
+                        icon,
+                        color="white",
+                        size=28
+                    ),
+
+                    ft.Text(
+                        mensaje,
+                        color="white",
+                        size=14,
+                        expand=True
+                    )
+                ]
+            )
+        )
+
+        # Posición inferior derecha
+        wrapper = ft.Container(
+            content=toast,
+            alignment=ft.Alignment(1, 1),
+            padding=20
+        )
+
+        notification_layer.controls.append(wrapper)
+
+        page.update()
+
+        # Entrada animada
+        toast.opacity = 1
+        toast.offset = ft.Offset(0, 0)
+
+        page.update()
+
+        toast.opacity = 1
+        toast.offset = ft.Offset(0, 0)
+        page.update()
+
+        await asyncio.sleep(3)
+
+        toast.opacity = 0
+        toast.offset = ft.Offset(0, 0.5)
+        page.update()
+
+        await asyncio.sleep(0.35)
+
+        notification_layer.controls.remove(wrapper)
+        page.update()
 
     # ------------------------------------------
     # EVENTOS
@@ -98,12 +190,10 @@ def login_view(page: ft.Page) -> ft.View:
         identificador = txt_login_user.value
         pwd = txt_login_pass.value
         if not identificador or not pwd:
-            page.snack_bar = ft.SnackBar(
-                content=ft.Text("Por favor complete todos los campos"),
-                bgcolor="#B81D24"
+            await mostrar_notificacion(
+                "Porfavor complete todos los campos",
+                "error"
             )
-            page.snack_bar.open = True
-            page.update()
             return
         try:
             empleado = empleado_dao.verify_login(identificador, pwd)
@@ -153,12 +243,10 @@ def login_view(page: ft.Page) -> ft.View:
             return
 
         #Por si alguno de los dos no funciona
-        page.snack_bar = ft.SnackBar(
-            content=ft.Text("Usuario o contraseña incorrectos"),
-            bgcolor="#B81D24"
+        await mostrar_notificacion(
+            "Usuario o contraseña incorrectos",
+            "error"
         )
-        page.snack_bar.open = True
-        page.update()
     def handle_reset(e):
         email = txt_reset_email.value
         if email:
@@ -166,15 +254,13 @@ def login_view(page: ft.Page) -> ft.View:
         else:
             page.open(ft.SnackBar(ft.Text("Ingrese su correo electrónico"), bgcolor="#B81D24"))
 
-    def handle_register(e):
+    async def handle_register(e):
 
         if txt_reg_pass.value != txt_reg_confirm.value:
-            page.snack_bar = ft.SnackBar(
-                content=ft.Text("Las contraseñas no coinciden"),
-                bgcolor="#B81D24"
+            await mostrar_notificacion(
+                "Las contraseñas no coinciden.",
+                "error"
             )
-            page.snack_bar.open = True
-            page.update()
 
         if (
                 txt_reg_nombre.value == "" or
@@ -182,11 +268,9 @@ def login_view(page: ft.Page) -> ft.View:
                 txt_reg_user.value == "" or
                 txt_reg_email.value == ""
         ):
-            page.open(
-                ft.SnackBar(
-                    ft.Text("Complete todos los campos obligatorios"),
-                    bgcolor="#B81D24"
-                )
+            await mostrar_notificacion(
+                "Complete todos los campos obligatorios.",
+                "error"
             )
             return
 
@@ -209,13 +293,10 @@ def login_view(page: ft.Page) -> ft.View:
             dao = UserDAO()
             dao.insert(nuevo_usuario)
 
-            page.snack_bar = ft.SnackBar(
-                content=ft.Text("Usuario registrado correctamente"),
-                bgcolor=COLOR_AZUL_COBALTO
+            await mostrar_notificacion(
+                "Usuario registrado correctamente.",
+                "success"
             )
-            page.snack_bar.open = True
-            page.update()
-
 
             txt_reg_nombre.value = ""
             txt_reg_paterno.value = ""
@@ -232,12 +313,11 @@ def login_view(page: ft.Page) -> ft.View:
 
         except Exception as ex:
 
-            page.open(
-                ft.SnackBar(
-                    ft.Text(f"Error al registrar: {ex}"),
-                    bgcolor="#B81D24"
-                )
+            await mostrar_notificacion(
+                "Hubo un error al registrarse.",
+                "error"
             )
+
     # ------------------------------------------
     # NAVEGACIÓN
     # ------------------------------------------
@@ -479,14 +559,26 @@ def login_view(page: ft.Page) -> ft.View:
     return ft.View(
         route="/",
         controls=[
-            ft.Column(
-                controls=[header, center_body, footer],
+            ft.Stack(
                 expand=True,
-                spacing=0
+                controls=[
+
+                    ft.Column(
+                        controls=[
+                            header,
+                            center_body,
+                            footer
+                        ],
+                        expand=True,
+                        spacing=0
+                    ),
+
+                    notification_layer
+
+                ]
             )
         ],
-        padding=0,
-        spacing=0
+        padding=0
     )
 
     # Vista por defecto

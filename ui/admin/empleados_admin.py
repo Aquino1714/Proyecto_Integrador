@@ -1,8 +1,11 @@
 import asyncio
+from datetime import date
+
 import flet as ft
 
 from ui.colors import *
 from dao.empleado_dao import EmpleadoDAO
+from models.empleado import Empleado  # ⚠️ asumido: acepta empleado_id=None + kwargs, igual que en get_all()
 from ui.admin.dashboard_admin import sidebar, topbar  # ← necesarios para armar la View
 
 ROLES_MAP = {
@@ -13,6 +16,13 @@ ROLES_MAP = {
     5: "Triturador",
     6: "Distribucion",
 }
+
+TURNOS = [
+    "Matutino",
+    "Vespertino",
+    "Nocturno"
+]
+
 
 ROL_ID_MAP = {v: k for k, v in ROLES_MAP.items()}
 
@@ -118,17 +128,27 @@ def tabla_empleados(empleados: list, on_ver_detalle=None):
         bgcolor=CARD_BG,
         border_radius=10,
         padding=0,
+        expand=True,  # <-- ocupa todo el ancho disponible
         content=ft.DataTable(
+            expand=True,  # <-- la tabla también intenta expandirse
             columns=[
-                ft.DataColumn(ft.Text("ID", size=12, weight=ft.FontWeight.BOLD, color=TEXT_PRIMARY)),
-                ft.DataColumn(ft.Text("Nombre completo", size=12, weight=ft.FontWeight.BOLD, color=TEXT_PRIMARY)),
-                ft.DataColumn(ft.Text("Correo electrónico", size=12, weight=ft.FontWeight.BOLD, color=TEXT_PRIMARY)),
-                ft.DataColumn(ft.Text("Rol", size=12, weight=ft.FontWeight.BOLD, color=TEXT_PRIMARY)),
+                ft.DataColumn(
+                    ft.Text("ID", size=12, weight=ft.FontWeight.BOLD, color=TEXT_PRIMARY)
+                ),
+                ft.DataColumn(
+                    ft.Text("Nombre completo", size=12, weight=ft.FontWeight.BOLD, color=TEXT_PRIMARY)
+                ),
+                ft.DataColumn(
+                    ft.Text("Correo electrónico", size=12, weight=ft.FontWeight.BOLD, color=TEXT_PRIMARY)
+                ),
+                ft.DataColumn(
+                    ft.Text("Rol", size=12, weight=ft.FontWeight.BOLD, color=TEXT_PRIMARY)
+                ),
             ],
             rows=filas,
             heading_row_color=ft.Colors.with_opacity(0.04, TEXT_PRIMARY),
             divider_thickness=0.5,
-            column_spacing=30,
+            column_spacing=50,  # antes 30
             data_row_min_height=44,
         ),
     )
@@ -162,7 +182,7 @@ def paginacion(pagina_actual: int, total_paginas: int, on_cambiar_pagina=None):
             on_click=(lambda e: on_cambiar_pagina(min(total_paginas, pagina_actual + 1))) if on_cambiar_pagina else None,
         )
     )
-    return ft.Row(controls=controles, alignment=ft.MainAxisAlignment.CENTER, spacing=2)
+    return ft.Row(controles, alignment=ft.MainAxisAlignment.CENTER, spacing=2) if False else ft.Row(controls=controles, alignment=ft.MainAxisAlignment.CENTER, spacing=2)
 
 
 def boton_informacion():
@@ -295,17 +315,24 @@ def detalle_empleado_card(emp, on_cerrar=None, on_editar=None, on_dar_baja=None)
 
 
 # ── Formulario de edición (modal) ───────────────────────────────────────────
-def campo_editable(label: str, value: str, ancho=None):
+def campo_editable(label: str, value: str):
     return ft.TextField(
         label=label,
         value=value,
+        expand=True,
+        height=55,
         border_radius=8,
         border_color=DIVIDER,
         bgcolor=CARD_BG,
         text_size=13,
-        label_style=ft.TextStyle(size=12, color=TEXT_SECONDARY),
-        content_padding=ft.Padding.symmetric(horizontal=12, vertical=10),
-        width=ancho,
+        label_style=ft.TextStyle(
+            size=11,
+            color=TEXT_SECONDARY,
+        ),
+        content_padding=ft.Padding.symmetric(
+            horizontal=12,
+            vertical=8
+        ),
     )
 
 
@@ -313,14 +340,13 @@ def formulario_editar_empleado(emp, on_guardar=None, on_cancelar=None):
     nombre_field = campo_editable("Nombre", emp.name)
     apaterno_field = campo_editable("Apellido paterno", emp.aPaterno)
     amaterno_field = campo_editable("Apellido materno", emp.aMaterno)
-    correo_field = campo_editable("Correo electrónico", emp.email)
-    telefono_field = campo_editable("Teléfono", emp.phone or "")
-    # ⚠️ formato asumido YYYY-MM-DD, confirmar si hay date picker en otro módulo
+
     fecha_nac_field = campo_editable(
         "Fecha de nacimiento",
         str(emp.fecha_nacimiento) if emp.fecha_nacimiento else "",
     )
-    turno_field = campo_editable("Turno", emp.turno or "")  # ⚠️ texto libre, confirmar catálogo
+    telefono_field = campo_editable("Teléfono", emp.phone or "")
+    correo_field = campo_editable("Correo electrónico", emp.email)
 
     rol_dropdown = ft.Dropdown(
         label="Rol",
@@ -332,9 +358,26 @@ def formulario_editar_empleado(emp, on_guardar=None, on_cancelar=None):
         options=[ft.dropdown.Option(r) for r in ROLES_FILTRO],
     )
 
+    turno_dropdown = ft.Dropdown(
+        label="Turno",
+        value=emp.turno if emp.turno else None,
+        expand=True,
+        border_radius=8,
+        border_color=DIVIDER,
+        text_size=13,
+        label_style=ft.TextStyle(
+            size=11,
+            color=TEXT_SECONDARY
+        ),
+        options=[
+            ft.dropdown.Option(t)
+            for t in TURNOS
+        ],
+    )
+
     activo_switch = ft.Switch(
         label="Activo",
-        value=True,
+        value=emp.active,
         label_text_style=ft.TextStyle(size=13, color=TEXT_PRIMARY),
     )
 
@@ -347,7 +390,7 @@ def formulario_editar_empleado(emp, on_guardar=None, on_cancelar=None):
             "email": correo_field.value,
             "phone": telefono_field.value,
             "fecha_nacimiento": fecha_nac_field.value,
-            "turno": turno_field.value,
+            "turno": turno_dropdown.value,
             "id_rol": ROL_ID_MAP.get(rol_dropdown.value, emp.id_rol),
             "active": activo_switch.value,
         }
@@ -355,7 +398,7 @@ def formulario_editar_empleado(emp, on_guardar=None, on_cancelar=None):
             on_guardar(datos_editados)
 
     return ft.Container(
-        width=460,
+        width=600,
         bgcolor=CARD_BG,
         border_radius=14,
         padding=24,
@@ -383,9 +426,9 @@ def formulario_editar_empleado(emp, on_guardar=None, on_cancelar=None):
                 ft.Divider(height=1, color=DIVIDER),
                 ft.Row(controls=[nombre_field], spacing=10),
                 ft.Row(controls=[apaterno_field, amaterno_field], spacing=10),
+                ft.Row(controls=[fecha_nac_field, telefono_field], spacing=10),
                 correo_field,
-                ft.Row(controls=[telefono_field, fecha_nac_field], spacing=10),
-                ft.Row(controls=[rol_dropdown, turno_field], spacing=10),
+                ft.Row(controls=[rol_dropdown, turno_dropdown], spacing=10),
                 activo_switch,
                 ft.Container(height=6),
                 ft.Row(
@@ -393,8 +436,8 @@ def formulario_editar_empleado(emp, on_guardar=None, on_cancelar=None):
                         ft.OutlinedButton(
                             "Cancelar",
                             style=ft.ButtonStyle(
-                                color=TEXT_SECONDARY,
-                                side=ft.BorderSide(1, DIVIDER),
+                                color=STAT_ORANGE,  # ← ahora naranja
+                                side=ft.BorderSide(1, STAT_ORANGE),
                                 shape=ft.RoundedRectangleBorder(radius=8),
                             ),
                             on_click=(lambda e: on_cancelar(e)) if on_cancelar else None,
@@ -404,6 +447,157 @@ def formulario_editar_empleado(emp, on_guardar=None, on_cancelar=None):
                             "Guardar cambios",
                             bgcolor=STAT_BLUE,
                             color="#fff",
+                            style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)),
+                            on_click=_guardar,
+                        ),
+                    ],
+                ),
+            ],
+        ),
+    )
+
+
+# ── Formulario de creación "Nuevo empleado" (modal) ─────────────────────────
+def campo_nuevo(label: str, hint: str, password: bool = False):
+    """Devuelve (field, layout): field para leer el valor, layout para insertar en la grilla."""
+    field = ft.TextField(
+        hint_text=hint,
+        password=password,
+        can_reveal_password=password,
+        border_radius=8,
+        border_color=DIVIDER,
+        bgcolor=CARD_BG,
+        text_size=13,
+        content_padding=ft.Padding.symmetric(horizontal=12, vertical=10),
+        expand=True,
+    )
+    layout = ft.Column(
+        spacing=4,
+        expand=True,
+        controls=[
+            ft.Text(label, size=12, color=TEXT_SECONDARY),
+            field,
+        ],
+    )
+    return field, layout
+
+
+def formulario_nuevo_empleado(on_guardar=None, on_cancelar=None):
+    nombre_field, nombre_box = campo_nuevo("Nombres:", "Nombre")
+    apaterno_field, apaterno_box = campo_nuevo("Apellido paterno:", "Apellido paterno")
+    amaterno_field, amaterno_box = campo_nuevo("Apellido materno:", "Apellido materno")
+    correo_field, correo_box = campo_nuevo("Correo electrónico:", "ejemplo02@neusomic.com")
+    # ⚠️ formato asumido DD/MM/AAAA como texto libre (igual que en el formulario de edición)
+    fecha_nac_field, fecha_nac_box = campo_nuevo("Fecha de nacimiento:", "DD/MM/AAAA")
+    telefono_field, telefono_box = campo_nuevo("Teléfono:", "10 dígitos")
+    password_field, password_box = campo_nuevo("Contraseña:", "Contraseña", password=True)
+
+    rol_dropdown = ft.Dropdown(
+        label="Rol",
+        expand=True,
+        border_radius=8,
+        border_color=DIVIDER,
+        text_size=13,
+        label_style=ft.TextStyle(size=12, color=TEXT_SECONDARY),
+        options=[ft.dropdown.Option(r) for r in ROLES_FILTRO],
+    )
+
+    turno_dropdown = ft.Dropdown(
+        label="Turno",
+        expand=True,
+        border_radius=8,
+        border_color=DIVIDER,
+        text_size=13,
+        label_style=ft.TextStyle(size=12, color=TEXT_SECONDARY),
+        options=[ft.dropdown.Option(t) for t in TURNOS],
+    )
+
+    error_text = ft.Text("", size=12, color=STAT_ORANGE, visible=False)
+
+    def _guardar(e):
+        campos_obligatorios = [
+            nombre_field.value,
+            apaterno_field.value,
+            correo_field.value,
+            password_field.value,
+            rol_dropdown.value,
+        ]
+        if not all(campos_obligatorios):
+            error_text.value = "Completa nombres, apellido paterno, correo, contraseña y rol."
+            error_text.visible = True
+            error_text.update()
+            return
+
+        datos_nuevos = {
+            "name": nombre_field.value,
+            "aPaterno": apaterno_field.value,
+            "aMaterno": amaterno_field.value,
+            "email": correo_field.value,
+            "phone": telefono_field.value or None,
+            "fecha_nacimiento": fecha_nac_field.value,
+            "turno": turno_dropdown.value,
+            "id_rol": ROL_ID_MAP.get(rol_dropdown.value),
+            "password": password_field.value,
+        }
+        if on_guardar:
+            on_guardar(datos_nuevos)
+
+    return ft.Container(
+        width=560,
+        bgcolor=CARD_BG,
+        border_radius=14,
+        padding=24,
+        shadow=ft.BoxShadow(
+            blur_radius=30,
+            color=ft.Colors.with_opacity(0.35, "#000000"),
+            offset=ft.Offset(0, 10),
+        ),
+        content=ft.Column(
+            spacing=14,
+            tight=True,
+            controls=[
+                ft.Row(
+                    controls=[
+                        ft.Text("Nuevo empleado", size=16, weight=ft.FontWeight.BOLD, color=TEXT_PRIMARY),
+                        ft.Container(expand=True),
+                        ft.IconButton(
+                            icon=ft.Icons.CLOSE,
+                            icon_color=STAT_ORANGE,
+                            icon_size=18,
+                            on_click=(lambda e: on_cancelar(e)) if on_cancelar else None,
+                        ),
+                    ],
+                ),
+                ft.Divider(height=1, color=DIVIDER),
+                ft.Row(controls=[nombre_box, apaterno_box], spacing=14),
+                ft.Row(controls=[amaterno_box, correo_box], spacing=14),
+                ft.Row(controls=[fecha_nac_box, telefono_box], spacing=14),
+                password_box,
+                ft.Row(controls=[rol_dropdown, turno_dropdown], spacing=14),
+                error_text,
+                ft.Container(height=6),
+                ft.Row(
+                    controls=[
+                        ft.OutlinedButton(
+                            "Cancelar",
+                            style=ft.ButtonStyle(
+                                color=STAT_ORANGE,
+                                side=ft.BorderSide(1, STAT_ORANGE),
+                                shape=ft.RoundedRectangleBorder(radius=8),
+                            ),
+                            on_click=(lambda e: on_cancelar(e)) if on_cancelar else None,
+                        ),
+                        ft.Container(expand=True),
+                        ft.ElevatedButton(
+                            content=ft.Row(
+                                controls=[
+                                    ft.Icon(ft.Icons.ADD, size=16, color="#fff"),
+                                    ft.Text("Agregar empleado", size=13, color="#fff", weight=ft.FontWeight.W_600),
+                                ],
+                                spacing=6,
+                                tight=True,
+                            ),
+                            bgcolor=STAT_BLUE,
                             style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)),
                             on_click=_guardar,
                         ),
@@ -555,14 +749,36 @@ def empleados_content(page: ft.Page, on_nuevo_empleado=None, on_ver_detalle=None
         emp_actualizado.active = datos["active"]
         # ⚠️ password_hash se reenvía tal cual para no perder el password actual,
         # pero EmpleadoDAO.update() lo vuelve a hashear -> ROMPE EL LOGIN.
-        # Pendiente resolver en el DAO (ver nota en el mensaje anterior).
+        # Pendiente resolver en el DAO (ver nota en mensajes anteriores).
         EmpleadoDAO().update(emp_actualizado)
         _refrescar_lista()
         cerrar_modal()
 
     def confirmar_baja(empleado_id, motivo):
-        from datetime import date
         EmpleadoDAO().unsubscribe(empleado_id, motivo, date.today())
+        _refrescar_lista()
+        cerrar_modal()
+
+    def guardar_nuevo(datos):
+        # ⚠️ password_hash recibe el texto plano a propósito:
+        # EmpleadoDAO.insert() lo hashea internamente (a diferencia de update()).
+        nuevo = Empleado(
+            empleado_id=None,
+            name=datos["name"],
+            aPaterno=datos["aPaterno"],
+            aMaterno=datos["aMaterno"],
+            email=datos["email"],
+            phone=datos["phone"],
+            password_hash=datos["password"],
+            active=True,
+            fecha_registro=date.today(),
+            fecha_baja=None,
+            motivo_baja=None,
+            id_rol=datos["id_rol"],
+            fecha_nacimiento=datos["fecha_nacimiento"],
+            turno=datos["turno"],
+        )
+        EmpleadoDAO().insert(nuevo)
         _refrescar_lista()
         cerrar_modal()
 
@@ -590,6 +806,30 @@ def empleados_content(page: ft.Page, on_nuevo_empleado=None, on_ver_detalle=None
 
         page.run_task(_abrir)
 
+    def abrir_nuevo(e=None):
+        async def _abrir():
+            formulario = formulario_nuevo_empleado(on_guardar=guardar_nuevo, on_cancelar=cerrar_modal)
+            modal_card_ref.current.content = formulario
+            modal_overlay_ref.current.visible = True
+            modal_card_ref.current.scale = 0.85
+            modal_card_ref.current.opacity = 0
+            modal_backdrop_ref.current.opacity = 0
+            modal_overlay_ref.current.update()
+
+            await asyncio.sleep(0.02)
+            modal_backdrop_ref.current.opacity = 1
+            modal_card_ref.current.scale = 1
+            modal_card_ref.current.opacity = 1
+            modal_backdrop_ref.current.update()
+            modal_card_ref.current.update()
+
+        page.run_task(_abrir)
+
+    def manejar_click_nuevo(e):
+        abrir_nuevo(e)
+        if on_nuevo_empleado:
+            on_nuevo_empleado(e)
+
     def manejar_click_fila(emp):
         abrir_detalle(emp)
         if on_ver_detalle:
@@ -604,7 +844,8 @@ def empleados_content(page: ft.Page, on_nuevo_empleado=None, on_ver_detalle=None
                 ft.Container(
                     ref=modal_backdrop_ref,
                     expand=True,
-                    bgcolor=ft.Colors.with_opacity(0.5, "#000000"),
+                    bgcolor=ft.Colors.with_opacity(0.65, "#000000"),  # más opaco para resaltar la tarjeta
+                    blur=10,  # efecto glass sobre el contenido de fondo
                     opacity=0,
                     animate_opacity=ft.Animation(250, ft.AnimationCurve.EASE_OUT),
                     on_click=cerrar_modal,
@@ -634,7 +875,7 @@ def empleados_content(page: ft.Page, on_nuevo_empleado=None, on_ver_detalle=None
                 content=ft.Column(
                     controls=[
                         ft.Row(
-                            controls=[buscador_empleado(), boton_nuevo_empleado(on_nuevo_empleado)],
+                            controls=[buscador_empleado(), boton_nuevo_empleado(manejar_click_nuevo)],
                             spacing=12,
                         ),
                         ft.Container(height=12),
@@ -647,14 +888,10 @@ def empleados_content(page: ft.Page, on_nuevo_empleado=None, on_ver_detalle=None
                             ],
                         ),
                         ft.Container(height=20),
-                        ft.Row(
-                            controls=[
-                                ft.Container(
-                                    ref=tabla_wrapper_ref,
-                                    content=tabla_empleados(empleados, manejar_click_fila),
-                                )
-                            ],
-                            alignment=ft.MainAxisAlignment.CENTER,
+                        ft.Container(
+                            ref=tabla_wrapper_ref,
+                            expand=True,
+                            content=tabla_empleados(empleados, manejar_click_fila),
                         ),
                         ft.Container(expand=True),
                         ft.Row(
@@ -674,7 +911,6 @@ def empleados_content(page: ft.Page, on_nuevo_empleado=None, on_ver_detalle=None
     )
 
 
-# ── Vista completa de Empleados (esto es lo que app.py necesita importar) ──
 def empleados_admin(page: ft.Page, on_navigate=None, on_nuevo_empleado=None, on_ver_detalle=None):
     active_route = "/usuarios"
 
@@ -685,7 +921,7 @@ def empleados_admin(page: ft.Page, on_navigate=None, on_nuevo_empleado=None, on_
         controls=[
             ft.Column(
                 controls=[
-                    topbar(page),
+                    topbar(page, active_route),
                     ft.Row(
                         controls=[
                             sidebar(active_route=active_route, on_navigate=on_navigate),

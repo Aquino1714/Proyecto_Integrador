@@ -121,9 +121,19 @@ def about_dialog(page: ft.Page):
 
 
 # ── Top bar ──────────────────────────────────────────────────────────────────
-def topbar(page: ft.Page):
+def topbar(page: ft.Page, active_route: str):
     dialog = about_dialog(page)
 
+    TITULOS = {
+        "/dashboard_admin": "Dashboard",
+        "/usuarios": "Empleados",
+        "/neumaticos": "Monitor de transporte",
+        "/desechos": "Desechos",
+        "/reportes": "Reportes",
+        "/transporte": "Transporte",
+    }
+
+    titulo = TITULOS.get(active_route, "Dashboard")
 
     logo = ft.Image(
         src="assets/images/logo.png",
@@ -137,23 +147,30 @@ def topbar(page: ft.Page):
             controls=[
                 logo,
                 ft.Container(width=20),
-                ft.Text("Dashboard", size=20, color="#fff", weight=ft.FontWeight.BOLD),
+
+                ft.Text(
+                    titulo,
+                    size=20,
+                    color="#fff",
+                    weight=ft.FontWeight.BOLD,
+                ),
+
                 ft.Container(expand=True),
-                # Notification bell
+
                 ft.Container(
                     content=ft.Icon(ft.Icons.NOTIFICATIONS_NONE, color="#f97316", size=18),
                     padding=6,
                 ),
-                ft.Text("Administrador", size=12, color="#fff"),
+
+                ft.Text("Administrador", size=14, color="rgba(255,255,255,0.5"),
                 ft.Text("|", size=14, color="rgba(255,255,255,0.5)"),
-                # Profile
+
                 ft.Container(
                     content=ft.Icon(ft.Icons.ACCOUNT_CIRCLE, color="#fff", size=28),
                     padding=6,
                     bgcolor="rgba(255,255,255,0.15)",
                     border_radius=20,
                 ),
-
             ],
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
             spacing=10,
@@ -242,7 +259,7 @@ def dashboard_admin(page: ft.Page, on_navigate=None):
         controls=[
             ft.Column(
                 controls=[
-                    topbar(page),
+                    topbar(page, active_route),
                     ft.Row(
                         controls=[
                             sidebar(active_route=active_route, on_navigate=on_navigate),

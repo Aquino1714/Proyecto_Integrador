@@ -29,8 +29,8 @@ class EmpleadoDAO:
                 fecha_baja = register[9],
                 motivo_baja = register[10],
                 id_rol = register[11],
-                fecha_nacimiento = register[12],
-                turno = register[13]
+                turno = register[12],
+                fecha_nacimiento = register[13]
             )
             empleados.append(empleado)
 
@@ -65,8 +65,8 @@ class EmpleadoDAO:
             fecha_baja = register[9],
             motivo_baja = register[10],
             id_rol = register[11],
-            fecha_nacimiento = register[12],
-            turno = register[13]
+            turno = register[12],
+            fecha_nacimiento = register[13]
         )
 
     def get_by_email(self, email):
@@ -95,8 +95,8 @@ class EmpleadoDAO:
             fecha_baja = register[9],
             motivo_baja = register[10],
             id_rol = register[11],
-            fecha_nacimiento = register[12],
-            turno = register[13]
+            turno=register[12],
+            fecha_nacimiento = register[13]
         )
 
     def insert(self, empleado):
@@ -108,7 +108,7 @@ class EmpleadoDAO:
 
         sql = """
             INSERT INTO empleados (nombre, aPaterno, aMaterno, correo, telefono, password, activo, fecha_registro,
-                                    fecha_baja, motivo_baja, id_rol, fecha_nacimiento, turno)
+                                    fecha_baja, motivo_baja, id_rol, turno, fecha_nacimiento)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
 
@@ -124,8 +124,8 @@ class EmpleadoDAO:
             empleado.fecha_baja,
             empleado.motivo_baja,
             empleado.id_rol,
-            empleado.fecha_nacimiento,
             empleado.turno,
+            empleado.fecha_nacimiento,
         ))
 
         conn.commit()
@@ -142,7 +142,7 @@ class EmpleadoDAO:
 
         sql = """
             UPDATE empleados SET nombre = %s, aPaterno = %s, aMaterno = %s, correo = %s, telefono = %s, password = %s,
-                                activo = %s, fecha_baja = %s, motivo_baja = %s, id_rol = %s, fecha_nacimiento = %s, turno = %s
+                                activo = %s, fecha_baja = %s, motivo_baja = %s, id_rol = %s, turno = %s, fecha_nacimiento = %s
                 WHERE empleado_id = %s
         """
 
@@ -157,8 +157,8 @@ class EmpleadoDAO:
             empleado.fecha_baja,
             empleado.motivo_baja,
             empleado.id_rol,
-            empleado.fecha_nacimiento,
             empleado.turno,
+            empleado.fecha_nacimiento,
             empleado.empleado_id
         ))
 
