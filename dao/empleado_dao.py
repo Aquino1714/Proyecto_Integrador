@@ -20,7 +20,7 @@ class EmpleadoDAO:
                 empleado_id = register[0],
                 name = register[1],
                 aPaterno = register[2],
-                aMAterno = register[3],
+                aMaterno = register[3],
                 email = register[4],
                 phone = register[5],
                 password_hash = register[6],
@@ -40,7 +40,7 @@ class EmpleadoDAO:
 
 
     def get_by_id(self, empleado_id):
-        conn = Connect.get_connec()
+        conn = Connect.get_connect()
         cursor = conn.cursor()
 
         cursor.execute("SELECT * FROM empleados WHERE empleado_id = %s", (empleado_id,))
@@ -70,7 +70,7 @@ class EmpleadoDAO:
         )
 
     def get_by_email(self, email):
-        conn = Connect.get_connec()
+        conn = Connect.get_connect()
         cursor = conn.cursor()
 
         cursor.execute("SELECT * FROM empleados WHERE correo = %s", (email,))
@@ -100,7 +100,7 @@ class EmpleadoDAO:
         )
 
     def insert(self, empleado):
-        conn = Connect.get_connec()
+        conn = Connect.get_connect()
         cursor = conn.cursor()
 
         # Encriptar la contraseña
@@ -134,7 +134,7 @@ class EmpleadoDAO:
 
 
     def update(self, empleado):
-        conn = Connect.get_connec()
+        conn = Connect.get_connect()
         cursor = conn.cursor()
 
         #Encriptar la contraseña
@@ -167,7 +167,7 @@ class EmpleadoDAO:
         conn.close()
 
     def delete(self, empleado_id):
-        conn = Connect.get_connec()
+        conn = Connect.get_connect()
         cursor = conn.cursor()
 
         cursor.execute("DELETE FROM empleados WHERE empleado_id = %s", (empleado_id,))
@@ -177,7 +177,7 @@ class EmpleadoDAO:
         conn.close()
 
     def unsubscribe(self, empleado_id, motivo_baja, fecha_baja):
-        conn = Connect.get_connec()
+        conn = Connect.get_connect()
         cursor = conn.cursor()
 
         sql = """
@@ -192,7 +192,7 @@ class EmpleadoDAO:
         conn.close()
 
     def get_last_id(self):
-        conn = Connect.get_connec()
+        conn = Connect.get_connect()
         cursor = conn.cursor()
 
         cursor.execute("SELECT empleado_id FROM empleados ORDER BY empleado_id DESC")

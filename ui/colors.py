@@ -1,0 +1,23 @@
+# Paleta de colores del sistema
+
+SIDEBAR_BG = "#1a2540"
+SIDEBAR_ACTIVE = "#f97316"
+SIDEBAR_TEXT = "#94a3b8"
+SIDEBAR_TEXT_ACTIVE = "#ffffff"
+TOPBAR_BG = "#1e3a8a"
+MAIN_BG = "#0f172a"
+CARD_BG = "#1e293b"
+CARD_BORDER = "#334155"
+GLASS_BG = "rgba(255,255,255,0.05)"
+GLASS_BORDER = "rgba(255,255,255,0.12)"
+
+STAT_BLUE = "#38bdf8"
+STAT_ORANGE = "#f97316"
+STAT_TEAL = "#2dd4bf"
+STAT_PINK = "#f472b6"
+
+TEXT_PRIMARY = "#f1f5f9"
+TEXT_SECONDARY = "#94a3b8"
+TEXT_MUTED = "#64748b"
+
+DIVIDER = "#2d3a50"

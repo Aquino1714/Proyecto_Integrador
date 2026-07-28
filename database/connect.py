@@ -9,7 +9,7 @@ class Connect:
 
     @staticmethod
 
-    def get_connec():
+    def get_connect():
         return psycopg2.connect(
             host = os.getenv("DB_HOST"),
             database = os.getenv("DB_NAME"),
