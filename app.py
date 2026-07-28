@@ -4,6 +4,7 @@ from ui.login_view import login_view
 from ui.admin.dashboard_admin import dashboard_admin
 from ui.admin.empleados_admin import empleados_admin
 from ui.admin.monitorTransporte_admin import monitor_transporte
+from ui.admin.desechos_admin import desechos_admin
 
 
 
@@ -62,6 +63,15 @@ async def main(page: ft.Page):
 
             page.views.append(
                 monitor_transporte(
+                    page,
+                    on_navigate=navigate
+                )
+            )
+
+        elif page.route == "/desechos":
+
+            page.views.append(
+                desechos_admin(
                     page,
                     on_navigate=navigate
                 )

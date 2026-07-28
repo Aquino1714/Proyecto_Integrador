@@ -95,63 +95,46 @@ def filtro_row(on_aplicar_filtro=None):
         on_click=lambda e: on_aplicar_filtro(dropdown.value) if on_aplicar_filtro else None,
     )
     return ft.Row(controls=[dropdown, aplicar_btn], spacing=10)
+def cambiar_hover(e):
+
+    e.control.bgcolor = (
+        ft.Colors.with_opacity(0.04, STAT_BLUE)
+        if e.data == "true"
+        else CARD_BG
+    )
+
+    e.control.update()
 
 
-def tabla_empleados(empleados: list, on_ver_detalle=None):
-    filas = []
-    for emp in empleados:
-        nombre_completo = f"{emp.name} {emp.aPaterno} {emp.aMaterno}"
-        rol_nombre = ROLES_MAP.get(emp.id_rol, "Sin rol asignado")
-        id_display = f"EMP-{emp.empleado_id:03d}"
-
-        filas.append(
-            ft.DataRow(
-                cells=[
-                    ft.DataCell(ft.Text(id_display, size=12, color=TEXT_SECONDARY)),
-                    ft.DataCell(
-                        ft.Text(
-                            nombre_completo,
-                            size=12,
-                            color=TEXT_PRIMARY,
-                            weight=ft.FontWeight.W_500,
-                            tooltip="Ver detalles del empleado"
-                        )
-                    ),
-                    ft.DataCell(ft.Text(emp.email, size=12, color=TEXT_SECONDARY)),
-                    ft.DataCell(badge_rol(rol_nombre)),
-                ],
-                on_select_change=(lambda e, emp=emp: on_ver_detalle(emp)) if on_ver_detalle else None,
-            )
-        )
+def tabla_empleados(empleados, on_ver_detalle=None):
 
     return ft.Container(
+        expand=True,
         bgcolor=CARD_BG,
+        ink=True,
+        on_hover=lambda e: cambiar_hover(e),
         border_radius=10,
-        padding=0,
-        expand=True,  # <-- ocupa todo el ancho disponible
-        content=ft.DataTable(
-            expand=True,  # <-- la tabla también intenta expandirse
-            columns=[
-                ft.DataColumn(
-                    ft.Text("ID", size=12, weight=ft.FontWeight.BOLD, color=TEXT_PRIMARY)
+        padding=15,
+        content=ft.Column(
+            spacing=0,
+            controls=[
+
+                encabezado_tabla(),
+
+                ft.Divider(height=1),
+
+                ft.ListView(
+                    expand=True,
+                    spacing=0,
+                    controls=[
+                        fila_empleado(emp, on_ver_detalle)
+                        for emp in empleados
+                    ]
                 ),
-                ft.DataColumn(
-                    ft.Text("Nombre completo", size=12, weight=ft.FontWeight.BOLD, color=TEXT_PRIMARY)
-                ),
-                ft.DataColumn(
-                    ft.Text("Correo electrónico", size=12, weight=ft.FontWeight.BOLD, color=TEXT_PRIMARY)
-                ),
-                ft.DataColumn(
-                    ft.Text("Rol", size=12, weight=ft.FontWeight.BOLD, color=TEXT_PRIMARY)
-                ),
-            ],
-            rows=filas,
-            heading_row_color=ft.Colors.with_opacity(0.04, TEXT_PRIMARY),
-            divider_thickness=0.5,
-            column_spacing=50,  # antes 30
-            data_row_min_height=44,
+            ]
         ),
     )
+
 
 
 def paginacion(pagina_actual: int, total_paginas: int, on_cambiar_pagina=None):
@@ -893,7 +876,6 @@ def empleados_content(page: ft.Page, on_nuevo_empleado=None, on_ver_detalle=None
                             expand=True,
                             content=tabla_empleados(empleados, manejar_click_fila),
                         ),
-                        ft.Container(expand=True),
                         ft.Row(
                             controls=[paginacion(pagina_actual=1, total_paginas=6)],
                             alignment=ft.MainAxisAlignment.CENTER,
@@ -939,3 +921,96 @@ def empleados_admin(page: ft.Page, on_navigate=None, on_nuevo_empleado=None, on_
             ),
         ],
     )
+
+def encabezado_tabla():
+        return ft.Container(
+            padding=15,
+            bgcolor=ft.Colors.with_opacity(0.04, TEXT_PRIMARY),
+            border_radius=10,
+            content=ft.Row(
+                controls=[
+                    ft.Container(
+                        ft.Text(
+                            "ID",
+                            weight=ft.FontWeight.BOLD,
+                            color=TEXT_PRIMARY,
+                        ),
+                        expand=1,
+                    ),
+
+                    ft.Container(
+                        ft.Text(
+                            "Nombre",
+                            weight=ft.FontWeight.BOLD,
+                            color=TEXT_PRIMARY,
+                        ),
+                        expand=3,
+                    ),
+
+                    ft.Container(
+                        ft.Text(
+                            "Correo",
+                            weight=ft.FontWeight.BOLD,
+                            color=TEXT_PRIMARY,
+                        ),
+                        expand=4,
+                    ),
+
+                    ft.Container(
+                        ft.Text(
+                            "Rol",
+                            weight=ft.FontWeight.BOLD,
+                            color=TEXT_PRIMARY,
+                        ),
+                        expand=2,
+                    ),
+                ]
+            ),
+        )
+
+def fila_empleado(emp, on_click=None):
+        nombre = f"{emp.name} {emp.aPaterno} {emp.aMaterno}"
+
+        return ft.Container(
+            padding=15,
+            border=ft.Border.only(
+                bottom=ft.BorderSide(1, DIVIDER)
+            ),
+            ink=True,
+            on_click=lambda e: on_click(emp) if on_click else None,
+            content=ft.Row(
+                controls=[
+
+                    ft.Container(
+                        ft.Text(
+                            f"EMP-{emp.empleado_id:03d}",
+                            color=TEXT_SECONDARY,
+                        ),
+                        expand=1,
+                    ),
+
+                    ft.Container(
+                        ft.Text(
+                            nombre,
+                            color=TEXT_PRIMARY,
+                        ),
+                        expand=3,
+                    ),
+
+                    ft.Container(
+                        ft.Text(
+                            emp.email,
+                            color=TEXT_SECONDARY,
+                        ),
+                        expand=4,
+                    ),
+
+                    ft.Container(
+                        badge_rol(
+                            ROLES_MAP.get(emp.id_rol, "")
+                        ),
+                        expand=2,
+                    ),
+                ]
+            ),
+        )

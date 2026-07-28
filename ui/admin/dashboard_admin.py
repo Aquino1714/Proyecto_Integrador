@@ -18,7 +18,7 @@ def sidebar(active_route: str = "/dashboard_admin", on_navigate=None):
         ("/usuarios", "Empleados", ft.Icons.BADGE_OUTLINED, False),
         ("/neumaticos", "Monitor\ntransporte", ft.Icons.LOCAL_SHIPPING_OUTLINED, False),
         # ("/recoleccion", "Resi", ft.Icons.LOCAL_SHIPPING_OUTLINED, False),
-        ("/desechos", "Desechos", ft.Icons.DELETE_OUTLINED, False),
+        ("/desechos", "Reportes \ndesechos", ft.Icons.DELETE_OUTLINED, False),
         ("/reportes", "Reportes", ft.Icons.ANALYTICS_OUTLINED, False),
         ("/transporte", "Transporte", ft.Icons.DIRECTIONS_BUS_OUTLINED, False),
     ]
