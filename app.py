@@ -1,8 +1,12 @@
 from dao.rol_dao import RolDAO
 from dao.empleado_dao import EmpleadoDAO
 from models.empleados import Empleado
+
 from dao.usuario_dao import UsuarioDAO
 from models.usuario import Usuario
+
+from dao.cliente_dao import ClienteDAO
+from models.clientes import Cliente
 
 
 # ==========================================
@@ -382,6 +386,171 @@ def menu_usuarios():
 
 
 #=========================================================================
+#clienes
+def ver_clientes():
+    try:
+        cliente_dao = ClienteDAO()
+        
+        clientes = cliente_dao.obtener_todos()
+
+
+        print ( "===Clietes===")
+
+        if len (clientes) == 0:
+            print ("No hay clientes.")
+        else:
+            for cliente in clientes:
+                print("================")
+
+                print(
+                    f"Cliente ID: {cliente.cliente_id}, "
+                    f"Nombre de la empresa: {cliente.razon_social}, "
+                    f"RFC: {cliente.rfc}, "
+                    f"Teléfono: {cliente.telefono}, "
+                    f"Correo: {cliente.correo}, "
+                    f"Dirección: {cliente.direccion}, "
+                    f"Tipo de cliente: {cliente.tipo_cliente}, "
+                    f"Estado: {'Sí' if cliente.activo else 'No'}, "
+                    f"Fecha de registro: {cliente.fecha_registro}"
+                )
+
+                print("================")
+
+        print("\n conexión exitosa a la base de datos")
+
+
+    except Exception as e:
+        print("Error:")
+        print(e)
+
+
+
+def insertar_cliente():
+    cliente_id = int (input ("ID del cliente: ") )
+    razon_social = input ("Nombre de la empresa:")
+    rfc = input("RFC:")
+    telefono = input("Numero de telefono:")
+    correo = input("Correo elctronico:")
+    direccion = input ("Dirección:")
+    tipo_cliente = input ("Tipo de cliente:")
+    activo = True
+    fecha_registro = input("fecha de registro")
+
+    try:
+        cliente_dao = ClienteDAO()
+
+        cliente = Cliente(
+            cliente_id = cliente_id,
+            razon_social = razon_social,
+            rfc = rfc,
+            telefono = telefono,
+            correo = correo,
+            direccion = direccion,
+            tipo_cliente = tipo_cliente,
+            activo = activo,
+            fecha_registro = fecha_registro
+        )
+        cliente_dao.insertar(cliente)
+        print ("Clente registrado con exito")
+
+    except Exception as e:
+        print("Error al insertarcliente")
+        print(e)
+
+def actualizar_cliente():
+    try:
+        cliente_dao = ClienteDAO()
+        ver_clientes()   
+        
+        cliente_id = int (input ("ID del clientea a actualizar: ") )
+        razon_social = input ("Nombre de la empresa:")
+        rfc = input("RFC:")
+        telefono = input("Numero de telefono:")
+        correo = input("Correo elctronico:")
+        direccion = input ("Dirección:")
+        tipo_cliente = input ("Tipo de cliente:")
+        activo = input("¿Activo? (si/no): ").lower() == "si"
+        fecha_registro = input("fecha de registro")
+
+        cliente = Cliente(
+            cliente_id = cliente_id,
+            razon_social = razon_social,
+            rfc = rfc,
+            telefono = telefono,
+            correo = correo,
+            direccion = direccion,
+            tipo_cliente = tipo_cliente,
+            activo = activo,
+            fecha_registro = fecha_registro
+        )
+
+        cliente_dao.actualizar(cliente)
+
+        print ("Cliente actulizado corretamente")
+
+    except Exception as e:
+        print("Error al actualizar cliente")
+        print(e)
+
+def eliminar_cliente():
+
+    try:
+        cliente_dao = ClienteDAO()
+        ver_clientes()
+
+        cliente_id = int (input("ID del cliente a eliminar:"))
+
+        cliente_dao.eliminar(cliente_id)
+
+        print ("Cliente eliminado correctamente.")
+
+
+    except Exception as e:
+        print("Error al eliminar cliente")
+        print (e)
+
+
+def menu_clientes():
+
+    print("===Cientes =====")
+    print("1. Ver clientes")
+    print("2. Insertar ciente")
+    print("3. Actualizar cliente")
+    print("4. Eliminar cliente")
+
+    opcion = int(input("Selecciona una opción: "))
+
+    match opcion:
+
+        case 1:
+            ver_clientes()
+
+        case 2:
+            insertar_cliente()
+
+        case 3:
+            actualizar_cliente()
+
+        case 4:
+            eliminar_cliente()
+
+        case _:
+            print("Opción no válida.")
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+#================================
 
 def main():
 
@@ -390,10 +559,11 @@ def main():
     print("1. Gestión de Roles")
     print("2. Gestión de Emleados")
     print("3. Gestión de usuarios")
+    print("4. Gestión de clienes")
 
     try:
 
-        opcion = int(input("Selecciona una opción general (1-3): "))
+        opcion = int(input("Selecciona una opción general (1-4): "))
 
         match opcion:
 
@@ -405,6 +575,9 @@ def main():
 
             case 3:
                 menu_usuarios()
+
+            case 4:
+                menu_clientes()
 
             case _:
                 print("Opción no valida.")

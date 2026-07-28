@@ -9,7 +9,7 @@ class UsuarioDAO:
         conexion = Conexion.obtener_conexion()
         cursor = conexion.cursor()
 
-        cursor.execute("SELECT * FROM usuario;")
+        cursor.execute("SELECT * FROM vista_usuarios;")
 
         registros = cursor.fetchall()
 
