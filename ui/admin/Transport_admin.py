@@ -248,7 +248,7 @@ def tarjeta_transporte(t: Transport, es_centro: bool, on_ver_detalle=None, on_ed
         border_radius=14,
         padding=14,
         ink=not es_centro,
-        tooltip=f"{t.placas} · {t.marca} {t.modelo}" if not es_centro else None,
+        tooltip="Ver más detalles",
         on_click=(lambda e: on_ver_detalle(t))
         if on_ver_detalle
         else None,
@@ -349,6 +349,7 @@ def carrusel_transportes(page: ft.Page, on_ver_detalle=None, on_editar=None):
             arriba = (
                     (CARD_HEIGHT - CARD_HEIGHT * escala) / 2
                     + desplazamiento_y
+                    + 50
             )
             rotacion = {
                 -2: -0.18,
@@ -468,9 +469,46 @@ def carrusel_transportes(page: ft.Page, on_ver_detalle=None, on_editar=None):
     )
 
     return contenido, refrescar_datos, ir_a
-
 # ── Tarjeta de detalle (modal) ───────────────────────────────────────────────
-def detalle_transporte_card(t: Transport, on_cerrar=None, on_dar_baja=None):
+def detalle_transporte_card(t: Transport, on_cerrar=None, on_dar_baja=None, on_guardar=None):
+
+    placas_field = campo_transporte(
+        "Placas",
+        t.placas,
+        read_only=False,
+    )
+
+    modelo_field = campo_transporte(
+        "Modelo",
+        t.modelo,
+        read_only=False,
+    )
+
+    marca_field = campo_transporte(
+        "Marca",
+        t.marca,
+        read_only=False,
+    )
+
+    capacidad_field = campo_transporte(
+        "Capacidad",
+        str(t.capacidad_carga),
+        read_only=False,
+    )
+
+    def guardar(e):
+        datos = {
+            "placas": placas_field.value,
+            "modelo": modelo_field.value,
+            "marca": marca_field.value,
+            "capacidad_carga": capacidad_field.value,
+            "estado": t.estado,
+            "id_empleado": t.id_empleado,
+        }
+
+        if on_guardar:
+            on_guardar(datos)
+
     return ft.Container(
         width=700,
         bgcolor=CARD_BG,
@@ -519,29 +557,10 @@ def detalle_transporte_card(t: Transport, on_cerrar=None, on_dar_baja=None):
                             expand=True,
                             spacing=14,
                             controls=[
-                                campo_transporte(
-                                    "Placas",
-                                    t.placas,
-                                    read_only=False,
-                                ),
-
-                                campo_transporte(
-                                    "Modelo",
-                                    t.modelo,
-                                    read_only=False,
-                                ),
-
-                                campo_transporte(
-                                    "Marca",
-                                    t.marca,
-                                    read_only=False,
-                                ),
-
-                                campo_transporte(
-                                    "Capacidad",
-                                    str(t.capacidad_carga),
-                                    read_only=False,
-                                ),
+                                placas_field,
+                                modelo_field,
+                                marca_field,
+                                capacidad_field,
                             ],
                         ),
 
@@ -589,6 +608,30 @@ def detalle_transporte_card(t: Transport, on_cerrar=None, on_dar_baja=None):
                         ),
 
                         ft.Container(expand=True),
+
+                        ft.ElevatedButton(
+                            content=ft.Row(
+                                tight=True,
+                                spacing=8,
+                                controls=[
+                                    ft.Icon(
+                                        ft.Icons.SAVE_OUTLINED,
+                                        color="white",
+                                        size=18,
+                                    ),
+                                    ft.Text(
+                                        "Guardar cambios",
+                                        color="white",
+                                        weight=ft.FontWeight.W_600,
+                                    ),
+                                ],
+                            ),
+                            bgcolor=STAT_BLUE,
+                            style=ft.ButtonStyle(
+                                shape=ft.RoundedRectangleBorder(radius=8),
+                            ),
+                            on_click=guardar,
+                        ),
 
                         ft.ElevatedButton(
                             bgcolor=STAT_ORANGE,
@@ -1064,7 +1107,7 @@ def transportes_content(page: ft.Page, on_nuevo_transporte=None, on_ver_detalle=
         t.placas = datos["placas"]
         t.modelo = datos["modelo"]
         t.marca = datos["marca"]
-        t.capacidad_carga = datos["capacidad_carga"]
+        t.capacidad_carga = int(datos["capacidad_carga"])
         t.estado = datos["estado"]
         t.id_empleado = datos["id_empleado"]
         TransportDAO().update(t)
@@ -1098,7 +1141,14 @@ def transportes_content(page: ft.Page, on_nuevo_transporte=None, on_ver_detalle=
         cerrar_modal()
 
     def manejar_ver_detalle(t: Transport):
-        _abrir_con(detalle_transporte_card(t, on_cerrar=cerrar_modal, on_dar_baja=ir_a_baja))
+        _abrir_con(
+            detalle_transporte_card(
+                t,
+                on_cerrar=cerrar_modal,
+                on_dar_baja=ir_a_baja,
+                on_guardar=lambda datos: guardar_edicion(t, datos)
+            )
+        )
         if on_ver_detalle:
             on_ver_detalle(t)
 

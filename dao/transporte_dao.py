@@ -42,7 +42,7 @@ class TransportDAO:
         cursor = conn.cursor()
 
         sql = """
-            INSERT INTO transportes (placas, marca, modelo, capacidad_carga, estado, activo, fecha_registro, fecha_baja, motivo_baja, id_empleado, imagen)
+            INSERT INTO transportes (placas, marca, modelo, capacidad_carga_kg, estado, activo, fecha_registro, fecha_baja, motivo_baja, id_empleado, imagen)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
 
@@ -71,7 +71,7 @@ class TransportDAO:
         cursor = conn.cursor()
 
         sql = """
-            UPDATE transportes SET placas = %s, marca = %s, modelo = %s, capacidad_carga = %s, estado = %s, activo = %s, fecha_registro = %s, fecha_baja = %s, motivo_baja = %s, id_empleado = %s, imagen = %s
+            UPDATE transportes SET placas = %s, marca = %s, modelo = %s, capacidad_carga_kg = %s, estado = %s, activo = %s, fecha_registro = %s, fecha_baja = %s, motivo_baja = %s, id_empleado = %s, imagen = %s
                 WHERE transporte_id = %s
         """
 
