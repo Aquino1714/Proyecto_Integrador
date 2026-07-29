@@ -3,7 +3,7 @@ from datetime import date, time
 
 from ui.colors import *
 from ui.admin.dashboard_admin import sidebar, topbar   # se reutilizan del dashboard_admin
-from dao.transporte_dao import TransporteDAO
+from dao.transporte_dao import TransportDAO
 
 
 # ── Colores por estado ───────────────────────────────────────────────────────
@@ -169,7 +169,7 @@ def mostrar_asignar_viaje(page: ft.Page, chofer: dict, on_confirmado):
             destino_field.error_text = "El destino es obligatorio"
             destino_field.update()
             return
-        TransporteDAO.asignar_viaje(
+        TransportDAO.asignar_viaje(
             transporte_id=chofer["transporte_id"],
             fecha=estado_seleccion["fecha"],
             hora=estado_seleccion["hora"],
@@ -363,7 +363,7 @@ def monitor_transporte(page: ft.Page, on_navigate=None):
 
     def cargar_datos():
         filtro = None if estado_vista["filtro"] in (None, "Todos") else estado_vista["filtro"]
-        estado_vista["choferes"] = TransporteDAO.obtener_choferes_transporte(
+        estado_vista["choferes"] = TransportDAO.obtener_choferes_transporte(
             busqueda=estado_vista["busqueda"] or None,
             filtro_estado=filtro,
         )
