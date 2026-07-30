@@ -20,6 +20,9 @@ from models.lotes import Lote
 from dao.material_dao import MaterialDAO
 from models.materiales import Material
 
+from dao.neumatico_dao import NeumaticoDAO
+from models.neumaticos import Neumatico
+
 
 # ==========================================
 
@@ -1032,7 +1035,7 @@ def ver_materiales():
 
         materiales = material_dao.obtener_todos()
 
-        print("===== MATERIALES =====")
+        print("=====mateiales =====")
 
         if len(materiales) == 0:
             print("No hay materiales registrados.")
@@ -1167,6 +1170,166 @@ def menu_materiales():
 
 
 #==================
+#NUMATICOS
+
+def ver_neumaticos():
+
+    try:
+
+        neumatico_dao = NeumaticoDAO()
+
+        neumaticos = neumatico_dao.obtener_todos()
+
+        print("===== neumaticos =====")
+
+        if len(neumaticos) == 0:
+            print("No hay neumáticos registrados.")
+
+        else:
+
+            for neumatico in neumaticos:
+
+                print("=========================")
+                print(
+                    f"Neumático ID: {neumatico.neumatico_id}, "
+                    f"Código: {neumatico.neumatico_codigo}, "
+                    f"Recolección ID: {neumatico.recoleccion_id}, "
+                    f"Medida: {neumatico.medida}, "
+                    f"Fecha de ingreso: {neumatico.fecha_ingreso}, "
+                    f"Empleado: {neumatico.empleado_nombre}, "
+                    f"Estado: {neumatico.estado}"
+                )
+                print("=========================")
+
+        print("\nConexión exitosa a la base de datos.")
+
+    except Exception as e:
+
+        print("Error:")
+        print(e)
+
+
+def insertar_neumatico():
+
+    neumatico_codigo = input("Código del neumático: ")
+    recoleccion_id = int(input("ID de la recolección: "))
+    medida = input("Medida del neumático: ")
+    empleado_recepcion_id = int(input("ID del empleado que recibe: "))
+    estado = input("Estado del neumático: ")
+
+    try:
+
+        neumatico_dao = NeumaticoDAO()
+
+        neumatico = Neumatico(
+
+            neumatico_id=None,
+            neumatico_codigo=neumatico_codigo,
+            recoleccion_id=recoleccion_id,
+            medida=medida,
+            fecha_ingreso=None,
+            empleado_recepcion_id=empleado_recepcion_id,
+            empleado_nombre=None,
+            estado=estado
+
+        )
+
+        neumatico_dao.insertar(neumatico)
+
+        print("Neumático registrado correctamente.")
+
+    except Exception as e:
+
+        print("Error al insertar neumático.")
+        print(e)
+
+
+def actualizar_neumatico():
+
+    try:
+
+        neumatico_dao = NeumaticoDAO()
+
+        ver_neumaticos()
+
+        neumatico_id = int(input("ID del neumático a actualizar: "))
+        neumatico_codigo = input("Nuevo código: ")
+        recoleccion_id = int(input("Nuevo ID de la recolección: "))
+        medida = input("Nueva medida: ")
+        empleado_recepcion_id = int(input("Nuevo ID del empleado: "))
+        estado = input("Nuevo estado: ")
+
+        neumatico = Neumatico(
+
+            neumatico_id=neumatico_id,
+            neumatico_codigo=neumatico_codigo,
+            recoleccion_id=recoleccion_id,
+            medida=medida,
+            fecha_ingreso=None,
+            empleado_recepcion_id=empleado_recepcion_id,
+            empleado_nombre=None,
+            estado=estado
+
+        )
+
+        neumatico_dao.actualizar(neumatico)
+
+        print("Neumático actualizado correctamente.")
+
+    except Exception as e:
+
+        print("Error al actualizar neumático.")
+        print(e)
+
+
+def eliminar_neumatico():
+
+    try:
+
+        neumatico_dao = NeumaticoDAO()
+
+        ver_neumaticos()
+
+        neumatico_id = int(input("ID del neumático a eliminar: "))
+
+        neumatico_dao.eliminar(neumatico_id)
+
+        print("Neumático eliminado correctamente.")
+
+    except Exception as e:
+
+        print("Error al eliminar neumático.")
+        print(e)
+
+
+def menu_neumaticos():
+
+    print("===== NEUMÁTICOS =====")
+    print("1. Ver neumáticos")
+    print("2. Insertar neumático")
+    print("3. Actualizar neumático")
+    print("4. Eliminar neumático")
+
+    opcion = int(input("Selecciona una opción: "))
+
+    match opcion:
+
+        case 1:
+            ver_neumaticos()
+
+        case 2:
+            insertar_neumatico()
+
+        case 3:
+            actualizar_neumatico()
+
+        case 4:
+            eliminar_neumatico()
+
+        case _:
+            print("Opción no válida.")
+
+            #=====================================
 
         
 
@@ -1189,6 +1352,7 @@ def main():
     print("6. Gestión de Stock de Productos")
     print("7. Gestión de Lotes")
     print("8. Gestión de Materiales")
+    print("9. Gestión de Neumáticos")
 
     try:
 
@@ -1219,6 +1383,9 @@ def main():
             
             case 8:
                 menu_materiales()
+
+            case 9:
+                menu_neumaticos()
 
             case _:
                 print("Opción no valida.")
