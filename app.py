@@ -17,6 +17,9 @@ from models.stock_productos import StockProducto
 from dao.lote_dao import LoteDAO
 from models.lotes import Lote
 
+from dao.material_dao import MaterialDAO
+from models.materiales import Material
+
 
 # ==========================================
 
@@ -1017,6 +1020,154 @@ def menu_lotes():
         case _:
             print("Opción no válida.")
 
+
+
+####===================
+#materiles
+def ver_materiales():
+
+    try:
+
+        material_dao = MaterialDAO()
+
+        materiales = material_dao.obtener_todos()
+
+        print("===== MATERIALES =====")
+
+        if len(materiales) == 0:
+            print("No hay materiales registrados.")
+
+        else:
+
+            for material in materiales:
+
+                print("============================")
+                print(
+                    f"Material ID: {material.material_id}, "
+                    f"Lote ID: {material.lote_id}, "
+                    f"Cantidad (kg): {material.cantidad_kg}, "
+                    f"Fecha de producción: {material.fecha_produccion}"
+                )
+                print("============================")
+
+        print("\nConexión exitosa a la base de datos.")
+
+    except Exception as e:
+
+        print("Error:")
+        print(e)
+
+
+def insertar_material():
+
+    lote_id = int(input("ID del lote: "))
+    cantidad_kg = float(input("Cantidad del material (kg): "))
+
+    try:
+
+        material_dao = MaterialDAO()
+
+        material = Material(
+
+            material_id=None,
+            lote_id=lote_id,
+            cantidad_kg=cantidad_kg,
+            fecha_produccion=None
+
+        )
+
+        material_dao.insertar(material)
+
+        print("Material registrado correctamente.")
+
+    except Exception as e:
+
+        print("Error al insertar material.")
+        print(e)
+
+
+def actualizar_material():
+
+    try:
+
+        material_dao = MaterialDAO()
+
+        ver_materiales()
+
+        material_id = int(input("ID del material a actualizar: "))
+        lote_id = int(input("Nuevo ID del lote: "))
+        cantidad_kg = float(input("Nueva cantidad (kg): "))
+
+        material = Material(
+
+            material_id=material_id,
+            lote_id=lote_id,
+            cantidad_kg=cantidad_kg,
+            fecha_produccion=None
+
+        )
+
+        material_dao.actualizar(material)
+
+        print("Material actualizado correctamente.")
+
+    except Exception as e:
+
+        print("Error al actualizar material.")
+        print(e)
+
+
+def eliminar_material():
+
+    try:
+
+        material_dao = MaterialDAO()
+
+        ver_materiales()
+
+        material_id = int(input("ID del material a eliminar: "))
+
+        material_dao.eliminar(material_id)
+
+        print("Material eliminado correctamente.")
+
+    except Exception as e:
+
+        print("Error al eliminar material.")
+        print(e)
+
+
+def menu_materiales():
+
+    print("===== MATERIALES =====")
+    print("1. Ver materiales")
+    print("2. Insertar material")
+    print("3. Actualizar material")
+    print("4. Eliminar material")
+
+    opcion = int(input("Selecciona una opción: "))
+
+    match opcion:
+
+        case 1:
+            ver_materiales()
+
+        case 2:
+            insertar_material()
+
+        case 3:
+            actualizar_material()
+
+        case 4:
+            eliminar_material()
+
+        case _:
+            print("Opción no válida.")
+
+
+
+#==================
+
         
 
 
@@ -1037,6 +1188,7 @@ def main():
     print("5. Gestión de Transportes")
     print("6. Gestión de Stock de Productos")
     print("7. Gestión de Lotes")
+    print("8. Gestión de Materiales")
 
     try:
 
@@ -1064,6 +1216,9 @@ def main():
 
             case 7:
                 menu_lotes()
+            
+            case 8:
+                menu_materiales()
 
             case _:
                 print("Opción no valida.")
