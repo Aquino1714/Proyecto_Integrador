@@ -11,6 +11,12 @@ from models.clientes import Cliente
 from dao.transporte_dao import TransporteDAO
 from models.transportes import Transporte
 
+from dao.stock_producto_dao import StockProductoDAO
+from models.stock_productos import StockProducto
+
+from dao.lote_dao import LoteDAO
+from models.lotes import Lote
+
 
 # ==========================================
 
@@ -702,13 +708,315 @@ def menu_transportes():
             print("Opción no válida.")
 
 #============================================
+#prductos
 
 
+def ver_stock_productos():
 
+    try:
 
+        stock_producto_dao = StockProductoDAO()
 
+        stock_productos = stock_producto_dao.obtener_todos()
+
+        print("===== STOCK DE PRODUCTOS =====")
+
+        if len(stock_productos) == 0:
+            print("No hay registros.")
+
+        else:
+
+            for stock_producto in stock_productos:
+
+                print("==============================")
+                print(
+                    f"ID: {stock_producto.stock_producto_id}, "
+                    f"Material ID: {stock_producto.material_id}, "
+                    f"Cantidad disponible (kg): {stock_producto.cantidad_disponible_kg}, "
+                    f"Stock mínimo: {stock_producto.stock_minimo}, "
+                    f"Stock máximo: {stock_producto.stock_maximo}, "
+                    f"Fecha de actualización: {stock_producto.fecha_actualizacion}"
+                )
+                print("==============================")
+
+        print("\nConexión exitosa a la base de datos.")
+
+    except Exception as e:
+
+        print("Error:")
+        print(e)
 
         
+def insertar_stock_producto():
+
+    material_id = int(input("ID del material: "))
+    cantidad_disponible_kg = float(input("Cantidad disponible (kg): "))
+    stock_minimo = float(input("Stock mínimo (kg): "))
+    stock_maximo = float(input("Stock máximo (kg): "))
+
+    try:
+
+        stock_producto_dao = StockProductoDAO()
+
+        stock_producto = StockProducto(
+
+            stock_producto_id=None,
+            material_id=material_id,
+            cantidad_disponible_kg=cantidad_disponible_kg,
+            stock_minimo=stock_minimo,
+            stock_maximo=stock_maximo,
+            fecha_actualizacion=None
+
+        )
+
+        stock_producto_dao.insertar(stock_producto)
+
+        print("Stock registrado correctamente.")
+
+    except Exception as e:
+
+        print("Error al insertar stock.")
+        print(e)
+
+
+def actualizar_stock_producto():
+
+    try:
+
+        stock_producto_dao = StockProductoDAO()
+
+        ver_stock_productos()
+
+        stock_producto_id = int(input("ID del registro a actualizar: "))
+        material_id = int(input("Nuevo ID del material: "))
+        cantidad_disponible_kg = float(input("Nueva cantidad disponible (kg): "))
+        stock_minimo = float(input("Nuevo stock mínimo (kg): "))
+        stock_maximo = float(input("Nuevo stock máximo (kg): "))
+
+        stock_producto = StockProducto(
+
+            stock_producto_id=stock_producto_id,
+            material_id=material_id,
+            cantidad_disponible_kg=cantidad_disponible_kg,
+            stock_minimo=stock_minimo,
+            stock_maximo=stock_maximo,
+            fecha_actualizacion=None
+
+        )
+
+        stock_producto_dao.actualizar(stock_producto)
+
+        print("Stock actualizado correctamente.")
+
+    except Exception as e:
+
+        print("Error al actualizar stock.")
+        print(e)
+
+def eliminar_stock_producto():
+
+    try:
+
+        stock_producto_dao = StockProductoDAO()
+
+        ver_stock_productos()
+
+        stock_producto_id = int(input("ID del registro a eliminar: "))
+
+        stock_producto_dao.eliminar(stock_producto_id)
+
+        print("Registro eliminado correctamente.")
+
+    except Exception as e:
+
+        print("Error al eliminar el registro.")
+        print(e)
+
+def menu_stock_productos():
+
+    print("===== STOCK DE PRODUCTOS =====")
+    print("1. Ver stock")
+    print("2. Insertar stock")
+    print("3. Actualizar stock")
+    print("4. Eliminar stock")
+
+    opcion = int(input("Selecciona una opción: "))
+
+    match opcion:
+
+        case 1:
+            ver_stock_productos()
+
+        case 2:
+            insertar_stock_producto()
+
+        case 3:
+            actualizar_stock_producto()
+
+        case 4:
+            eliminar_stock_producto()
+
+        case _:
+            print("Opción no válida.")
+
+
+
+
+
+
+
+
+
+
+
+        #========================================
+
+#lotes
+def ver_lotes():
+
+    try:
+
+        lote_dao = LoteDAO()
+
+        lotes = lote_dao.obtener_todos()
+
+        print("===== LOTES =====")
+
+        if len(lotes) == 0:
+            print("No hay lotes registrados.")
+
+        else:
+
+            for lote in lotes:
+
+                print("============================")
+                print(
+                    f"Lote ID: {lote.lote_id}, "
+                    f"Empleado Triturador ID: {lote.empleado_triturador_id}, "
+                    f"Cantidad de neumáticos: {lote.cantidad_neumaticos}, "
+                    f"Estado: {lote.estado}, "
+                    f"Fecha de creación: {lote.fecha_creacion}"
+                )
+                print("============================")
+
+        print("\nConexión exitosa a la base de datos.")
+
+    except Exception as e:
+
+        print("Error:")
+        print(e)
+
+
+def insertar_lote():
+
+    empleado_triturador_id = int(input("ID del empleado triturador: "))
+    cantidad_neumaticos = int(input("Cantidad de neumáticos: "))
+    estado = input("Estado del lote: ")
+
+    try:
+
+        lote_dao = LoteDAO()
+
+        lote = Lote(
+
+            lote_id=None,
+            empleado_triturador_id=empleado_triturador_id,
+            cantidad_neumaticos=cantidad_neumaticos,
+            estado=estado,
+            fecha_creacion=None
+
+        )
+
+        lote_dao.insertar(lote)
+
+        print("Lote registrado correctamente.")
+
+    except Exception as e:
+
+        print("Error al insertar lote.")
+        print(e)
+
+
+def actualizar_lote():
+
+    try:
+
+        lote_dao = LoteDAO()
+
+        ver_lotes()
+
+        lote_id = int(input("ID del lote a actualizar: "))
+        empleado_triturador_id = int(input("Nuevo ID del empleado triturador: "))
+        cantidad_neumaticos = int(input("Nueva cantidad de neumáticos: "))
+        estado = input("Nuevo estado del lote: ")
+
+        lote = Lote(
+
+            lote_id=lote_id,
+            empleado_triturador_id=empleado_triturador_id,
+            cantidad_neumaticos=cantidad_neumaticos,
+            estado=estado,
+            fecha_creacion=None
+
+        )
+
+        lote_dao.actualizar(lote)
+
+        print("Lote actualizado correctamente.")
+
+    except Exception as e:
+
+        print("Error al actualizar lote.")
+        print(e)
+
+
+def eliminar_lote():
+
+    try:
+
+        lote_dao = LoteDAO()
+
+        ver_lotes()
+
+        lote_id = int(input("ID del lote a eliminar: "))
+
+        lote_dao.eliminar(lote_id)
+
+        print("Lote eliminado correctamente.")
+
+    except Exception as e:
+
+        print("Error al eliminar lote.")
+        print(e)
+
+
+def menu_lotes():
+
+    print("===== lotes =====")
+    print("1. Ver lotes")
+    print("2. Insertar lote")
+    print("3. Actualizar lote")
+    print("4. Eliminar lote")
+
+    opcion = int(input("Selecciona una opción: "))
+
+    match opcion:
+
+        case 1:
+            ver_lotes()
+
+        case 2:
+            insertar_lote()
+
+        case 3:
+            actualizar_lote()
+
+        case 4:
+            eliminar_lote()
+
+        case _:
+            print("Opción no válida.")
+
         
 
 
@@ -727,6 +1035,8 @@ def main():
     print("3. Gestión de usuarios")
     print("4. Gestión de clienes")
     print("5. Gestión de Transportes")
+    print("6. Gestión de Stock de Productos")
+    print("7. Gestión de Lotes")
 
     try:
 
@@ -748,6 +1058,12 @@ def main():
 
             case 5:
                 menu_transportes()
+            
+            case 6:
+                menu_stock_productos()
+
+            case 7:
+                menu_lotes()
 
             case _:
                 print("Opción no valida.")
