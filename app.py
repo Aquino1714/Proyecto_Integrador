@@ -1,12 +1,10 @@
 import flet as ft
 
 from ui.login_view import login_view
-from ui.admin.dashboard_admin import dashboard_admin
-from ui.admin.empleados_admin import empleados_admin
-from ui.admin.monitorTransporte_admin import monitor_transporte
-from ui.admin.desechos_admin import desechos_admin
-from ui.admin.reportsEmp_admin import reportes_empleados_admin
-from ui.admin.Transport_admin import transportes_admin
+from ui.admin import *
+from ui.trituradora import *
+from ui.almacen import *
+from ui.vulcanizadora import *
 
 
 
@@ -45,6 +43,25 @@ async def main(page: ft.Page):
 
             page.views.append(
                 dashboard_admin(
+                    page,
+                    on_navigate=navigate
+                )
+            )
+
+
+        elif page.route == "/dashboard_trituradora":
+
+            page.views.append(
+                dashboard_trituradora(
+                    page,
+                    on_navigate=navigate
+                )
+            )
+
+        elif page.route == "/dashboard_vulcanizadora":
+
+            page.views.append(
+                dashboard_vulcanizadora(
                     page,
                     on_navigate=navigate
                 )
@@ -93,6 +110,66 @@ async def main(page: ft.Page):
             page.views.append(
                 transportes_admin (
                     page,
+                    on_navigate=navigate
+                )
+            )
+
+        elif page.route == "/produccion":
+
+            page.views.append(
+                production_trituradora(
+                    page,
+                    on_navigate=navigate
+                )
+            )
+        elif page.route == "/maquinaria":
+
+            page.views.append(
+                equipos_triturador(
+                    page,
+                    on_navigate=navigate
+                )
+            )
+        elif page.route == "/reporte":
+            empleado_id = getattr(page, "empleado_id", None)
+            page.views.append(
+                reportes_trituracion(
+                    page,
+                    empleado_id,
+                    on_navigate=navigate
+                )
+            )
+        elif page.route == "/dashboard_almacen":
+            page.views.append(
+                dashboard_almacen(
+                    page,
+                    on_navigate=navigate
+                )
+            )
+        elif page.route == "/reportes_almacen":
+            empleado_id = getattr(page, "empleado_id", None)
+            page.views.append(
+                reportes_almacen(
+                    page,
+                    empleado_id,
+                    on_navigate=navigate
+                )
+            )
+
+        elif page.route == "/apollo":
+            page.views.append(
+                solicitud_apoyo(
+                    page,
+                    on_navigate=navigate
+                )
+            )
+
+        elif page.route == "/solicitudes":
+            vulcanizadora_id = getattr(page, "vulcanizadora_id", None)
+            page.views.append(
+                reportes_vulcanizadora(
+                    page,
+                    vulcanizadora_id,
                     on_navigate=navigate
                 )
             )

@@ -1,11 +1,16 @@
+from dao import vulcanizadora_dao
 from dao.user_dao import UserDAO
 from models.user import User
 from dao.empleado_dao import EmpleadoDAO
+from dao.vulcanizadora_dao import VulcanizadoraDAO
+from models.vulcanizadora import Vulcanizadora
 import hashlib
+from utils.security import Security
 import asyncio
 
 
 import flet as ft
+from dao.vulcanizadora_dao import VulcanizadoraDAO
 
 
 COLOR_AZUL_OXFORD = "#001F4E"
@@ -30,7 +35,7 @@ RUTAS_POR_ROL_EMPLEADO = {
     2: "/dashboard_chofer",
     3: "/dashboard_recepcion",
     4: "/dashboard_almacen",
-    5: "/dashboard_trituracion",
+    5: "/dashboard_trituradora",
     6: "/dashboard_distribucion",
 }
 def resolver_ruta_empleado(id_rol):
@@ -38,10 +43,12 @@ def resolver_ruta_empleado(id_rol):
 
 
 RUTA_DASHBOARD_USUARIO = "ui.user.dashboard_user"
+RUTA_DASHBOARD_VULCANIZADORA = "/dashboard_vulcanizadora"
 
 def login_view(page: ft.Page) -> ft.View:
     empleado_dao = EmpleadoDAO()
     user_dao = UserDAO()
+    vulcanizadora_dao = VulcanizadoraDAO()
 
 
     current_tab = 0
@@ -209,6 +216,7 @@ def login_view(page: ft.Page) -> ft.View:
             return
 
         if empleado is not None:
+            page.empleado_id = empleado.empleado_id
             ruta_destino = resolver_ruta_empleado(empleado.id_rol)
             page.snack_bar = ft.SnackBar(
                 content=ft.Text(f"Bienvenido, {empleado.name}"),
@@ -218,6 +226,30 @@ def login_view(page: ft.Page) -> ft.View:
             page.update()
 
             await page.push_route(ruta_destino)
+            return
+
+        try:
+            vulcanizadora = vulcanizadora_dao.verify_login(identificador, pwd)
+        except Exception as ex:
+            page.snack_bar = ft.SnackBar(
+                content=ft.Text(f"Error: {ex}"),
+                bgcolor="#B81D24"
+            )
+            page.snack_bar.open = True
+            page.update()
+            return
+
+        if vulcanizadora is not None:
+            page.vulcanizadora_id = vulcanizadora.vulcanizadora_id
+
+            page.snack_bar = ft.SnackBar(
+                content=ft.Text(f"Bienvenido, {vulcanizadora.nombre}"),
+                bgcolor=COLOR_AZUL_COBALTO
+            )
+            page.snack_bar.open = True
+            page.update()
+
+            await page.push_route(RUTA_DASHBOARD_VULCANIZADORA)
             return
 
         try:
@@ -241,6 +273,9 @@ def login_view(page: ft.Page) -> ft.View:
 
             await page.push_route(RUTA_DASHBOARD_USUARIO)
             return
+
+
+
 
         #Por si alguno de los dos no funciona
         await mostrar_notificacion(
@@ -276,9 +311,9 @@ def login_view(page: ft.Page) -> ft.View:
 
         try:
 
-            password_hash = hashlib.sha256(
-                txt_reg_pass.value.encode()
-            ).hexdigest()
+            password_hash = Security.hash_password(
+                txt_reg_pass.value
+            )
 
             nuevo_usuario = User(
                 username=txt_reg_user.value,

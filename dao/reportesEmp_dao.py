@@ -62,6 +62,44 @@ class ReportsEmpDAO:
         conn.close()
         return reports
 
+    def get_by_rol(self, rol_id):
+
+        conn = Connect.get_connect()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+                       SELECT r.reporte_id,
+                              r.asunto,
+                              r.descripcion,
+                              r.fecha_reporte,
+                              r.estado,
+                              r.empleado_id
+                       FROM reporte r
+                                INNER JOIN empleados e
+                                           ON e.empleado_id = r.empleado_id
+                       WHERE e.id_rol = %s
+                       """, (rol_id,))
+
+        registros = cursor.fetchall()
+
+        reportes = []
+
+        for registro in registros:
+            reportes.append(
+                ReportsEmp(
+                    reporte_id=registro[0],
+                    asunto=registro[1],
+                    descripcion=registro[2],
+                    fecha_reporte=registro[3],
+                    estado=registro[4],
+                    empleado_id=registro[5]
+                )
+            )
+
+        cursor.close()
+        conn.close()
+
+        return reportes
 
     def get_by_id_admin(self, reporte_id):
 
@@ -110,6 +148,7 @@ class ReportsEmpDAO:
         conn.commit()
         cursor.close()
         conn.close()
+
 
 
     def insert(self, report):

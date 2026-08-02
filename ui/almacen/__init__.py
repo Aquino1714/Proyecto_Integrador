@@ -1,0 +1,2 @@
+from .Dashboard_almacen import dashboard_almacen
+from .reportes_almacen import reportes_almacen

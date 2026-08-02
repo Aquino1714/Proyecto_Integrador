@@ -11,16 +11,11 @@ from ui.admin.components import (
 
 
 # ── Sidebar ──────────────────────────────────────────────────────────────────
-def sidebar(active_route: str = "/dashboard_admin", on_navigate=None):
+def sidebar(active_route: str = "/dashboard_almacen", on_navigate=None):
     items = [
-        # ("/dashboard", "", ft.Icons.HOME_OUTLINED, False),
-        ("/dashboard_admin", "Administrador", ft.Icons.ADMIN_PANEL_SETTINGS_OUTLINED, True),
-        ("/usuarios", "Empleados", ft.Icons.BADGE_OUTLINED, False),
-        ("/neumaticos", "Monitor\ntransporte", ft.Icons.LOCAL_SHIPPING_OUTLINED, False),
-        # ("/recoleccion", "Resi", ft.Icons.LOCAL_SHIPPING_OUTLINED, False),
-        ("/desechos", "Reportes \ndesechos", ft.Icons.DELETE_OUTLINED, False),
-        ("/reportes", "Reportes", ft.Icons.ANALYTICS_OUTLINED, False),
-        ("/transporte", "Transporte", ft.Icons.DIRECTIONS_BUS_OUTLINED, False),
+        ("/dashboard_almacen", "Panel principal", ft.Icons.COMPUTER_OUTLINED, True),
+        ("/inventario", "Inventario", ft.Icons.FACTORY_OUTLINED, False),
+        ("/reportes_almacen", "Reportes", ft.Icons.BAR_CHART_OUTLINED, False),
     ]
 
     def nav_item(route, label, icon, is_admin):
@@ -62,7 +57,7 @@ def sidebar(active_route: str = "/dashboard_admin", on_navigate=None):
         )
 
     return ft.Container(
-        width=220,
+        width=220,  # más ancho, acorde al mockup
         bgcolor=SIDEBAR_BG,
         padding=ft.Padding.only(left=10, right=10, top=18, bottom=14),
         content=ft.Column(
@@ -123,12 +118,9 @@ def topbar(page: ft.Page, active_route: str):
     dialog = about_dialog(page)
 
     TITULOS = {
-        "/dashboard_admin": "Dashboard",
-        "/usuarios": "Empleados",
-        "/neumaticos": "Monitor de transporte",
-        "/desechos": "Desechos",
-        "/reportes": "Reportes",
-        "/transporte": "Transporte",
+        "/dashboard_almacen": "Dashboard",
+        "/produccion": "Inventario",
+        "/reportesu_almacen": "Reportes",
     }
 
     titulo = TITULOS.get(active_route, "Dashboard")
@@ -160,7 +152,7 @@ def topbar(page: ft.Page, active_route: str):
                     padding=6,
                 ),
 
-                ft.Text("Administrador", size=14, color="rgba(255,255,255,0.5"),
+                ft.Text("Almacen", size=14, color="rgba(255,255,255,0.5"),
                 ft.Text("|", size=14, color="rgba(255,255,255,0.5)"),
 
                 ft.Container(
@@ -182,10 +174,10 @@ def topbar(page: ft.Page, active_route: str):
 def stat_row():
     return ft.Row(
         controls=[
-            stat_card("Ingreso neumáticos", "4,850", "+12% vs mes anterior", STAT_ORANGE),
-            stat_card("Pedidos constructoras", "32", "Solicitudes recibidas", STAT_BLUE),
-            stat_card("Volumen pavimento", "28,400 Kg", "Producción actual", STAT_TEAL),
-            stat_card("Bajas de productos", "18", "Justificado por daño", STAT_PINK),
+            stat_card("Total neumáticos", "3,500 Pzas", "+10.4% ", STAT_BLUE),
+            stat_card("Peso acumulado", "49.9 t", "", STAT_ORANGE),
+            stat_card("Capacidad utilizada", "28, 400 Kg", "", STAT_TEAL),
+            stat_card("Lotes registrados", "3 lotes", "", STAT_RED),
         ],
         spacing=12,
         expand=True,
@@ -193,8 +185,8 @@ def stat_row():
 
 
 # ── Main dashboard view ──────────────────────────────────────────────────────
-def dashboard_admin(page: ft.Page, on_navigate=None):
-    active_route = "/dashboard_admin"
+def dashboard_almacen(page: ft.Page, on_navigate=None):
+    active_route = "/dashboard_almacen"
 
     info_button = ft.Container(
         content=ft.Icon(ft.Icons.INFO_OUTLINE, color="#ffffff", size=18),
@@ -251,7 +243,7 @@ def dashboard_admin(page: ft.Page, on_navigate=None):
     )
 
     return ft.View(
-        route="/dashboard_admin",
+        route="/dashboard_almacen",
         padding=0,
         bgcolor=MAIN_BG,
         controls=[

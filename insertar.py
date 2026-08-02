@@ -1,35 +1,31 @@
 from datetime import date
 
-from database.connect import Connect
-from models.empleado import Empleado
-from dao.empleado_dao import EmpleadoDAO
+from models.vulcanizadora import Vulcanizadora
+from dao.vulcanizadora_dao import VulcanizadoraDAO
 
-# --- Rellenar con los datos reales de Aquino ---
-name = "Aquino"          # TODO: nombre(s) real(es)
-aPaterno = "Skot"               # TODO
-aMaterno = "keneddy"               # TODO
-email = "aquino@ejemplo.com"           # usado como "usuario" para el login, según lo pedido
-phone = "222 333 4567"               # TODO
-id_rol = 1                # TODO: 1=Administrador, 2=Chofer, 3=Recepcion, 4=Almacen, 5=Triturador, 6=Distribucion
-fecha_nacimiento = date(2005, 11, 7)   # TODO: date(AAAA, MM, DD)
-turno = "Matutino"                   # TODO
-# ------------------------------------------------
 
-empleado = Empleado(
-    name=name,
-    aPaterno=aPaterno,
-    aMaterno=aMaterno,
-    email=email,
-    phone=phone,
-    password_hash="3557",  # se encripta dentro del DAO antes de guardar
-    id_rol=id_rol,
-    fecha_nacimiento=fecha_nacimiento,
-    turno=turno,
-    active=True,
-    fecha_registro=date.today()
+# -------- Datos de la vulcanizadora --------
+
+nombre = "Vulcanizadora El Rápido"
+telefono = "2221234567"
+correo = "v"
+responsable = "Aquino Skot Kennedy"
+direccion = "Av. Reforma #123, Puebla"
+
+# -------------------------------------------
+
+vulcanizadora = Vulcanizadora(
+    nombre=nombre,
+    telefono=telefono,
+    correo=correo,
+    responsable=responsable,
+    direccion=direccion,
+    activo=True,
+    fecha_registro=date.today(),
+    password_hash="1"      # El DAO la encripta automáticamente
 )
 
-dao = EmpleadoDAO()
-dao.insert(empleado)
+dao = VulcanizadoraDAO()
+dao.insert(vulcanizadora)
 
-print("Empleado insertado correctamente con contraseña encriptada.")
+print("Vulcanizadora insertada correctamente con contraseña encriptada.")

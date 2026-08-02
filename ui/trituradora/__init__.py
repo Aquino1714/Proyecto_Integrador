@@ -1,0 +1,4 @@
+from .dashboar_trituradora import dashboard_trituradora
+from .production_trituradora import production_trituradora
+from .equipos import equipos_triturador
+from .reportes_trituradora import reportes_trituracion

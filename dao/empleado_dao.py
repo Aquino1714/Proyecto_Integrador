@@ -99,6 +99,62 @@ class EmpleadoDAO:
             fecha_nacimiento = register[13]
         )
 
+    def get_by_rol(self, id_rol):
+        conn = Connect.get_connect()
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT * FROM empleados WHERE id_rol = %s", (id_rol,))
+        registers = cursor.fetchall()
+
+        empleados = []
+
+        for register in registers:
+            empleado = Empleado(
+                empleado_id=register[0],
+                name=register[1],
+                aPaterno=register[2],
+                aMaterno=register[3],
+                email=register[4],
+                phone=register[5],
+                password_hash=register[6],
+                active=register[7],
+                fecha_registro=register[8],
+                fecha_baja=register[9],
+                motivo_baja=register[10],
+                id_rol=register[11],
+                turno=register[12],
+                fecha_nacimiento=register[13]
+            )
+            empleados.append(empleado)
+
+        cursor.close()
+        conn.close()
+        return empleados
+
+    def get_operadores(self):
+        conn = Connect.get_connect()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+                       SELECT empleado_id, nombre, aPaterno, aMaterno
+                       FROM empleados
+                       WHERE id_rol = 5
+                         AND activo = TRUE
+                       """)
+
+        registros = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+
+        return [
+            {
+                "id": r[0],
+                "nombre": f"{r[1]} {r[2]} {r[3]}"
+            }
+            for r in registros
+        ]
+
     def insert(self, empleado):
         conn = Connect.get_connect()
         cursor = conn.cursor()

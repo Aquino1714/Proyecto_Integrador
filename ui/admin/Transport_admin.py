@@ -552,7 +552,6 @@ def detalle_transporte_card(t: Transport, on_cerrar=None, on_dar_baja=None, on_g
                     vertical_alignment=ft.CrossAxisAlignment.START,
                     controls=[
 
-                        # ---------------- Izquierda ----------------
                         ft.Column(
                             expand=True,
                             spacing=14,
@@ -563,8 +562,6 @@ def detalle_transporte_card(t: Transport, on_cerrar=None, on_dar_baja=None, on_g
                                 capacidad_field,
                             ],
                         ),
-
-                        # ---------------- Derecha ----------------
                         ft.Container(
                             width=250,
                             content=ft.Column(

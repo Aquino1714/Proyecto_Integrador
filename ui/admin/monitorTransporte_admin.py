@@ -11,8 +11,8 @@ ESTADO_COLORS = {
     "Disponible": STAT_BLUE,
     "En viaje": STAT_ORANGE,
     "De regreso": STAT_TEAL,
-    "Mantenimiento": "#9CA3AF",       # gris, no estaba en el mockup, agregado por completitud
-    "Fuera de servicio": "#f87171",   # rojo, idem
+    "Mantenimiento": "#9CA3AF",
+    "Fuera de servicio": "#f87171",
 }
 
 FILTROS_ESTADO = ["Todos", "Disponible", "En viaje", "De regreso", "Mantenimiento", "Fuera de servicio"]

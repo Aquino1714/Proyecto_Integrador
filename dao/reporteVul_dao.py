@@ -238,6 +238,53 @@ class ReportVulDAO:
 
         return choferes
 
+    def get_by_vulcanizadora_admin(self, vulcanizadora_id):
+
+        conn = Connect.get_connect()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+                       SELECT r.reporte_id,
+                              r.cantidad_llantas,
+                              r.fecha_reporte,
+                              r.estado,
+                              r.detalles,
+                              r.vulcanizadora_id,
+                              r.empleado_id,
+                              v.nombre,
+                              CONCAT(e.nombre, ' ', e.aPaterno)
+                       FROM reportes r
+                                INNER JOIN vulcanizadoras v
+                                           ON v.vulcanizadora_id = r.vulcanizadora_id
+                                LEFT JOIN empleados e
+                                          ON e.empleado_id = r.empleado_id
+                       WHERE r.vulcanizadora_id = %s
+                       ORDER BY r.fecha_reporte DESC, r.reporte_id DESC
+                       """, (vulcanizadora_id,))
+
+        registers = cursor.fetchall()
+
+        reports = []
+
+        for register in registers:
+            report = ReportVul(
+                reporte_id=register[0],
+                cantidad_llantas=register[1],
+                fecha_reporte=register[2],
+                estado=register[3],
+                detalles=register[4],
+                vulcanizadora_id=register[5],
+                empleado_id=register[6],
+                vulcanizadora_nombre=register[7],
+                empleado_nombre=register[8]
+            )
+
+            reports.append(report)
+
+        cursor.close()
+        conn.close()
+
+        return reports
 
     def asignar_chofer(self, reporte_id, empleado_id):
 
