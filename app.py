@@ -23,6 +23,13 @@ from models.materiales import Material
 from dao.neumatico_dao import NeumaticoDAO
 from models.neumaticos import Neumatico
 
+from dao.recoleccion_dao import RecoleccionDAO
+from models.recolecciones import Recoleccion
+
+from dao.inventario_entrada_dao import InventarioEntradaDAO
+from models.inventario_entrada import InventarioEntrada
+
+
 
 # ==========================================
 
@@ -1331,6 +1338,328 @@ def menu_neumaticos():
 
             #=====================================
 
+#recolecion
+
+
+
+def ver_recolecciones():
+
+    try:
+
+        recoleccion_dao = RecoleccionDAO()
+
+        recolecciones = recoleccion_dao.obtener_todos()
+
+        print("===== RECOLECCIONES =====")
+
+        if len(recolecciones) == 0:
+
+            print("No hay registros.")
+
+        else:
+
+            for recoleccion in recolecciones:
+
+                print("==============================")
+                print(
+                    f"ID: {recoleccion.recoleccion_id}, "
+                    f"Reporte ID: {recoleccion.reporte_id}, "
+                    f"Transporte ID: {recoleccion.transporte_id}, "
+                    f"Empleado ID: {recoleccion.empleado_id}, "
+                    f"Fecha asignación: {recoleccion.fecha_asignacion}, "
+                    f"Inicio viaje: {recoleccion.fecha_inicio_viaje}, "
+                    f"Fecha recolección: {recoleccion.fecha_recoleccion}, "
+                    f"Cantidad neumáticos: {recoleccion.cantidad_neumaticos}, "
+                    f"Estado: {recoleccion.estado}"
+                )
+                print("==============================")
+
+    except Exception as e:
+
+        print("Error:")
+        print(e)
+
+
+def insertar_recoleccion():
+
+    reporte_id = int(input("ID del reporte: "))
+    transporte_id = int(input("ID del transporte: "))
+    empleado_id = int(input("ID del empleado: "))
+
+    fecha_inicio_viaje = input("Fecha inicio del viaje (AAAA-MM-DD HH:MM:SS): ")
+    fecha_recoleccion = input("Fecha de recolección (AAAA-MM-DD HH:MM:SS): ")
+
+    cantidad_neumaticos = int(input("Cantidad de neumáticos: "))
+    estado = input("Estado: ")
+
+    try:
+
+        recoleccion_dao = RecoleccionDAO()
+
+        recoleccion = Recoleccion(
+
+            recoleccion_id=None,
+            reporte_id=reporte_id,
+            transporte_id=transporte_id,
+            empleado_id=empleado_id,
+            fecha_asignacion=None,
+            fecha_inicio_viaje=fecha_inicio_viaje,
+            fecha_recoleccion=fecha_recoleccion,
+            cantidad_neumaticos=cantidad_neumaticos,
+            estado=estado
+
+        )
+
+        recoleccion_dao.insertar(recoleccion)
+
+        print("Recolección registrada correctamente.")
+
+    except Exception as e:
+
+        print("Error al insertar recolección.")
+        print(e)
+
+
+def actualizar_recoleccion():
+
+    try:
+
+        recoleccion_dao = RecoleccionDAO()
+
+        ver_recolecciones()
+
+        recoleccion_id = int(input("ID de la recolección a actualizar: "))
+
+        reporte_id = int(input("Nuevo ID del reporte: "))
+        transporte_id = int(input("Nuevo ID del transporte: "))
+        empleado_id = int(input("Nuevo ID del empleado: "))
+
+        fecha_inicio_viaje = input("Nueva fecha inicio del viaje (AAAA-MM-DD HH:MM:SS): ")
+        fecha_recoleccion = input("Nueva fecha de recolección (AAAA-MM-DD HH:MM:SS): ")
+
+        cantidad_neumaticos = int(input("Nueva cantidad de neumáticos: "))
+        estado = input("Nuevo estado: ")
+
+        recoleccion = Recoleccion(
+
+            recoleccion_id=recoleccion_id,
+            reporte_id=reporte_id,
+            transporte_id=transporte_id,
+            empleado_id=empleado_id,
+            fecha_asignacion=None,
+            fecha_inicio_viaje=fecha_inicio_viaje,
+            fecha_recoleccion=fecha_recoleccion,
+            cantidad_neumaticos=cantidad_neumaticos,
+            estado=estado
+
+        )
+
+        recoleccion_dao.actualizar(recoleccion)
+
+        print("Recolección actualizada correctamente.")
+
+    except Exception as e:
+
+        print("Error al actualizar la recolección.")
+        print(e)
+
+
+def eliminar_recoleccion():
+
+    try:
+
+        recoleccion_dao = RecoleccionDAO()
+
+        ver_recolecciones()
+
+        recoleccion_id = int(input("ID de la recolección a eliminar: "))
+
+        recoleccion_dao.eliminar(recoleccion_id)
+
+        print("Recolección eliminada correctamente.")
+
+    except Exception as e:
+
+        print("Error al eliminar la recolección.")
+        print(e)
+
+
+def menu_recolecciones():
+
+    print("===== RECOLECCIONES =====")
+    print("1. Ver recolecciones")
+    print("2. Insertar recolección")
+    print("3. Actualizar recolección")
+    print("4. Eliminar recolección")
+
+    opcion = int(input("Selecciona una opción: "))
+
+    match opcion:
+
+        case 1:
+            ver_recolecciones()
+
+        case 2:
+            insertar_recoleccion()
+
+        case 3:
+            actualizar_recoleccion()
+
+        case 4:
+            eliminar_recoleccion()
+
+        case _:
+            print("Opción no válida.")
+
+
+
+
+#===============
+#invenario de enrada
+
+
+
+
+def ver_inventario_entrada():
+
+    try:
+
+        inventario_dao = InventarioEntradaDAO()
+
+        inventarios = inventario_dao.obtener_todos()
+
+        print("=====inventario de entrada====")
+
+        if len(inventarios) == 0:
+
+            print("No hay registros.")
+
+        else:
+
+            for inventario in inventarios:
+
+                print("===========================")
+                print(
+                    f"ID: {inventario.inventario_id}, "
+                    f"Neumático ID: {inventario.neumatico_id}, "
+                    f"Ubicación ID: {inventario.ubicacion_id}, "
+                    f"Fecha de ingreso: {inventario.fecha_ingreso}"
+                )
+                print("==========================")
+
+    except Exception as e:
+
+        print("Error:")
+        print(e)
+
+
+def insertar_inventario_entrada():
+
+    neumatico_id = int(input("ID del neumático: "))
+    ubicacion_id = int(input("ID de la ubicación: "))
+
+    try:
+
+        inventario_dao = InventarioEntradaDAO()
+
+        inventario = InventarioEntrada(
+
+            inventario_id=None,
+            neumatico_id=neumatico_id,
+            ubicacion_id=ubicacion_id,
+            fecha_ingreso=None
+
+        )
+
+        inventario_dao.insertar(inventario)
+
+        print("Inventario registrado correctamente.")
+
+    except Exception as e:
+
+        print("Error al insertar el inventario.")
+        print(e)
+
+
+def actualizar_inventario_entrada():
+
+    try:
+
+        inventario_dao = InventarioEntradaDAO()
+
+        ver_inventario_entrada()
+
+        inventario_id = int(input("ID del inventario a actualizar: "))
+
+        neumatico_id = int(input("Nuevo ID del neumático: "))
+        ubicacion_id = int(input("Nuevo ID de la ubicación: "))
+
+        inventario = InventarioEntrada(
+
+            inventario_id=inventario_id,
+            neumatico_id=neumatico_id,
+            ubicacion_id=ubicacion_id,
+            fecha_ingreso=None
+
+        )
+
+        inventario_dao.actualizar(inventario)
+
+        print("Inventario actualizado correctamente.")
+
+    except Exception as e:
+
+        print("Error al actualizar el inventario.")
+        print(e)
+
+
+def eliminar_inventario_entrada():
+
+    try:
+
+        inventario_dao = InventarioEntradaDAO()
+
+        ver_inventario_entrada()
+
+        inventario_id = int(input("ID del inventario a eliminar: "))
+
+        inventario_dao.eliminar(inventario_id)
+
+        print("Inventario eliminado correctamente.")
+
+    except Exception as e:
+
+        print("Error al eliminar el inventario.")
+        print(e)
+
+
+def menu_inventario_entrada():
+
+    print("===== INVENTARIO DE ENTRADA =====")
+    print("1. Ver inventario")
+    print("2. Insertar inventario")
+    print("3. Actualizar inventario")
+    print("4. Eliminar inventario")
+
+    opcion = int(input("Selecciona una opción: "))
+
+    match opcion:
+
+        case 1:
+            ver_inventario_entrada()
+
+        case 2:
+            insertar_inventario_entrada()
+
+        case 3:
+            actualizar_inventario_entrada()
+
+        case 4:
+            eliminar_inventario_entrada()
+
+        case _:
+            print("Opción no válida.")
+
         
 
 
@@ -1353,10 +1682,12 @@ def main():
     print("7. Gestión de Lotes")
     print("8. Gestión de Materiales")
     print("9. Gestión de Neumáticos")
+    print("10. Gestión de Rcolecciones")
+    print("11. Gestión de inventario de entrada")
 
     try:
 
-        opcion = int(input("Selecciona una opción general (1-5: "))
+        opcion = int(input("Selecciona una opción general (1-11: "))
 
         match opcion:
 
@@ -1387,8 +1718,15 @@ def main():
             case 9:
                 menu_neumaticos()
 
+            case 10:
+                menu_recolecciones()
+
+            case 11:
+                menu_inventario_entrada()
+
             case _:
                 print("Opción no valida.")
+
 
     except ValueError:
         print("Por favor introduzca un numero valido.")
