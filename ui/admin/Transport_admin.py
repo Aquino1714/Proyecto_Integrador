@@ -4,8 +4,7 @@ from datetime import date
 import flet as ft
 
 from ui.colors import *
-from dao.transporte_dao import TransportDAO
-from dao.empleado_dao import EmpleadoDAO
+from dao import *
 from models.transporte import Transport
 from ui.admin.dashboard_admin import sidebar, topbar
 

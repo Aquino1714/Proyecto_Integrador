@@ -1,25 +1,11 @@
-from dao import vulcanizadora_dao
-from dao.user_dao import UserDAO
 from models.user import User
-from dao.empleado_dao import EmpleadoDAO
-from dao.vulcanizadora_dao import VulcanizadoraDAO
-from models.vulcanizadora import Vulcanizadora
-import hashlib
 from utils.security import Security
 import asyncio
-
+import re
+from ui.campos_login import *
+from dao import *
 
 import flet as ft
-from dao.vulcanizadora_dao import VulcanizadoraDAO
-
-
-COLOR_AZUL_OXFORD = "#001F4E"
-COLOR_AZUL_COBALTO = "#0A2F8F"
-COLOR_AZUL_MEDIO = "#1E88E5"
-COLOR_NARANJA_AMBAR = "#FC8F1B"
-COLOR_GRIS_OSCURO = "#333333"
-COLOR_BLANCO = "#FFFFFF"
-COLOR_AZUL_CIELO_INTENSO = "#E0FFFF"
 
 AERO_BG = "rgba(255,255,255,0.55)"
 AERO_BORDER = ft.Border(
@@ -29,7 +15,7 @@ AERO_BORDER = ft.Border(
     bottom=ft.BorderSide(1, "rgba(0,0,0,0.25)")
 )
 
-#Roles identificador
+# ── Roles identificables ──────────────────────────────────────────────────────
 RUTAS_POR_ROL_EMPLEADO = {
     1: "/dashboard_admin",
     2: "/dashboard_chofer",
@@ -45,6 +31,11 @@ def resolver_ruta_empleado(id_rol):
 RUTA_DASHBOARD_USUARIO = "ui.user.dashboard_user"
 RUTA_DASHBOARD_VULCANIZADORA = "/dashboard_vulcanizadora"
 
+def es_correo_valido(correo):
+    patron = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+    return re.match(patron, correo) is not None
+
+
 def login_view(page: ft.Page) -> ft.View:
     empleado_dao = EmpleadoDAO()
     user_dao = UserDAO()
@@ -52,59 +43,6 @@ def login_view(page: ft.Page) -> ft.View:
 
 
     current_tab = 0
-
-    # ------------------------------------------
-    # COMPONENTES REUTILIZABLES
-    # ------------------------------------------
-    def build_textfield(label: str, hint: str, icon: str, is_password: bool = False):
-        return ft.TextField(
-            label=label,
-            hint_text=hint,
-            prefix_icon=icon,
-            password=is_password,
-            can_reveal_password=is_password,
-            text_size=14,
-            label_style=ft.TextStyle(color="#CBD5E1", size=13),
-            hint_style=ft.TextStyle(color="#64748B", size=13),
-            border_color="rgba(255,255,255,0.2)",
-            focused_border_color=COLOR_AZUL_CIELO_INTENSO,
-            bgcolor="rgba(15,23,42,0.5)",
-            border_radius=8,
-            cursor_color=COLOR_AZUL_CIELO_INTENSO,
-            color=COLOR_BLANCO,
-            dense=True,
-            expand=True
-        )
-
-    # Campos Login
-    txt_login_user = build_textfield("Usuario", "usuario01@example.com", ft.Icons.PERSON_OUTLINED)
-    txt_login_pass = build_textfield("Contraseña", "********", ft.Icons.LOCK_OUTLINED, is_password=True)
-
-    # Campos Restablecer
-    txt_reset_email = build_textfield("Correo electrónico", "usuario@neusomic.com", ft.Icons.EMAIL_OUTLINED)
-
-    # Campos Registro
-    txt_reg_nombre = build_textfield("Nombres", "Nombre", ft.Icons.PERSON_OUTLINE)
-    txt_reg_paterno = build_textfield("Apellido paterno", "Apellido paterno", ft.Icons.PERSON_OUTLINE)
-    txt_reg_materno = build_textfield("Apellido materno", "Apellido materno", ft.Icons.PERSON_OUTLINE)
-    txt_reg_user = build_textfield("User name", "ejemplo01", ft.Icons.ACCOUNT_CIRCLE_OUTLINED)
-    txt_reg_phone = build_textfield("Teléfono","2221234567",ft.Icons.PHONE_OUTLINED)
-    txt_reg_email = build_textfield("Correo","usuario@correo.com",ft.Icons.EMAIL_OUTLINED)
-
-    txt_reg_pass = build_textfield("Contraseña", "********", ft.Icons.LOCK_OUTLINED, is_password=True)
-    txt_reg_confirm = build_textfield("Confirmar contraseña", "********", ft.Icons.LOCK_OUTLINED, is_password=True)
-
-    form_container = ft.Column(spacing=15, horizontal_alignment=ft.CrossAxisAlignment.CENTER)
-
-    title_text = ft.Text(size=24, weight=ft.FontWeight.BOLD, color=COLOR_BLANCO, text_align=ft.TextAlign.CENTER)
-    # ------------------------------------------
-    # NOTIFICACIONES FLOTANTES FLET 0.86.2
-    # ------------------------------------------
-
-    notification_layer = ft.Stack(
-        controls=[],
-        expand=True
-    )
 
     async def mostrar_notificacion(mensaje, tipo="normal"):
 
@@ -158,7 +96,6 @@ def login_view(page: ft.Page) -> ft.View:
             )
         )
 
-        # Posición inferior derecha
         wrapper = ft.Container(
             content=toast,
             alignment=ft.Alignment(1, 1),
@@ -169,7 +106,6 @@ def login_view(page: ft.Page) -> ft.View:
 
         page.update()
 
-        # Entrada animada
         toast.opacity = 1
         toast.offset = ft.Offset(0, 0)
 
@@ -190,9 +126,7 @@ def login_view(page: ft.Page) -> ft.View:
         notification_layer.controls.remove(wrapper)
         page.update()
 
-    # ------------------------------------------
-    # EVENTOS
-    # ------------------------------------------
+
     async def handle_login(e):
         identificador = txt_login_user.value
         pwd = txt_login_pass.value
@@ -206,14 +140,7 @@ def login_view(page: ft.Page) -> ft.View:
             empleado = empleado_dao.verify_login(identificador, pwd)
         except Exception as ex:
             print("ERROR LOGIN EMPLEADO:", ex)
-
-            page.snack_bar = ft.SnackBar(
-                content=ft.Text(str(ex)),
-                bgcolor="#B81D24"
-            )
-            page.snack_bar.open = True
-            page.update()
-            return
+            empleado = None
 
         if empleado is not None:
             page.empleado_id = empleado.empleado_id
@@ -231,13 +158,8 @@ def login_view(page: ft.Page) -> ft.View:
         try:
             vulcanizadora = vulcanizadora_dao.verify_login(identificador, pwd)
         except Exception as ex:
-            page.snack_bar = ft.SnackBar(
-                content=ft.Text(f"Error: {ex}"),
-                bgcolor="#B81D24"
-            )
-            page.snack_bar.open = True
-            page.update()
-            return
+            print("ERROR LOGIN VULCANIZADORA:", ex)
+            vulcanizadora = None
 
         if vulcanizadora is not None:
             page.vulcanizadora_id = vulcanizadora.vulcanizadora_id
@@ -255,13 +177,8 @@ def login_view(page: ft.Page) -> ft.View:
         try:
             user = user_dao.verify_login(identificador, pwd)
         except Exception as ex:
-            page.snack_bar = ft.SnackBar(
-                content=ft.Text(f"Error: {ex}"),
-                bgcolor="#B81D24"
-            )
-            page.snack_bar.open = True
-            page.update()
-            return
+            print("ERROR LOGIN USUARIO:", ex)
+            user = None
 
         if user is not None:
             page.snack_bar = ft.SnackBar(
@@ -277,17 +194,19 @@ def login_view(page: ft.Page) -> ft.View:
 
 
 
-        #Por si alguno de los dos no funciona
+        # ── Por si no se identifica el campo ──────────────────────────────────────────────────────
         await mostrar_notificacion(
-            "Usuario o contraseña incorrectos",
+            "Usuario y contraseña incorrectos",
             "error"
         )
-    def handle_reset(e):
+        return
+    async def handle_reset(e):
         email = txt_reset_email.value
         if email:
             page.open(ft.SnackBar(ft.Text(f"Solicitud enviada a: {email}"), bgcolor=COLOR_AZUL_MEDIO))
         else:
-            page.open(ft.SnackBar(ft.Text("Ingrese su correo electrónico"), bgcolor="#B81D24"))
+            await mostrar_notificacion("Ingrese su correo electrónico", "error")
+
 
     async def handle_register(e):
 
@@ -296,6 +215,7 @@ def login_view(page: ft.Page) -> ft.View:
                 "Las contraseñas no coinciden.",
                 "error"
             )
+            return
 
         if (
                 txt_reg_nombre.value == "" or
@@ -305,6 +225,13 @@ def login_view(page: ft.Page) -> ft.View:
         ):
             await mostrar_notificacion(
                 "Complete todos los campos obligatorios.",
+                "error"
+            )
+            return
+
+        if not es_correo_valido(txt_reg_email.value):
+            await mostrar_notificacion(
+                "Ingrese un correo electrónico válido.",
                 "error"
             )
             return
@@ -353,16 +280,88 @@ def login_view(page: ft.Page) -> ft.View:
                 "error"
             )
 
-    # ------------------------------------------
-    # NAVEGACIÓN
-    # ------------------------------------------
+    async def handle_register_vulcanizadora(e):
+
+        if txt_vul_pass.value != txt_vul_confirm.value:
+            await mostrar_notificacion(
+                "Las contraseñas no coinciden.",
+                "error"
+            )
+            return
+
+        campos = [
+            txt_vul_nombre.value,
+            txt_vul_telefono.value,
+            txt_vul_correo.value,
+            txt_vul_responsable.value,
+            txt_vul_direccion.value,
+            txt_vul_pass.value
+        ]
+
+        if any(c == "" for c in campos):
+            await mostrar_notificacion(
+                "Complete todos los campos obligatorios.",
+                "error"
+            )
+            return
+
+        if not es_correo_valido(txt_vul_correo.value):
+            await mostrar_notificacion(
+                "Ingrese un correo válido.",
+                "error"
+            )
+            return
+
+        try:
+
+            nueva_vulcanizadora = VulcanizadoraDAO(
+                nombre=txt_vul_nombre.value,
+                telefono=txt_vul_telefono.value,
+                correo=txt_vul_correo.value,
+                responsable=txt_vul_responsable.value,
+                direccion=txt_vul_direccion.value,
+                activo=True,
+                password_hash=txt_vul_pass.value
+            )
+
+            vulcanizadora_dao.insert(
+                nueva_vulcanizadora
+            )
+
+            await mostrar_notificacion(
+                "Vulcanizadora registrada correctamente.",
+                "success"
+            )
+
+            txt_vul_nombre.value = ""
+            txt_vul_telefono.value = ""
+            txt_vul_correo.value = ""
+            txt_vul_responsable.value = ""
+            txt_vul_direccion.value = ""
+            txt_vul_pass.value = ""
+            txt_vul_confirm.value = ""
+
+            page.update()
+
+            switch_tab(0)
+
+        except Exception as ex:
+
+            print("ERROR REGISTRO VULCANIZADORA:", ex)
+
+            await mostrar_notificacion(
+                "Error al registrar vulcanizadora.",
+                "error"
+            )
+
+
     def switch_tab(tab_index):
         nonlocal current_tab
         current_tab = tab_index
         form_container.controls.clear()
-
-        if tab_index == 0:  # LOGIN
-            title_text.value = "Acceso Neusomic"
+        # ── Login ──────────────────────────────────────────────────────
+        if tab_index == 0:
+            title_text.value = "Acceso al sistema Neusomic"
             form_container.controls.extend([
                 txt_login_user,
                 txt_login_pass,
@@ -373,8 +372,7 @@ def login_view(page: ft.Page) -> ft.View:
                             ft.Row(
                                 controls=[
                                     ft.Button(
-                                        content=ft.Text("Iniciar sesión", size=14, weight=ft.FontWeight.BOLD,
-                                                        color=COLOR_BLANCO),
+                                        content=ft.Text("Iniciar sesión", size=14, weight=ft.FontWeight.BOLD, color=COLOR_BLANCO),
                                         style=ft.ButtonStyle(
                                             bgcolor={"": COLOR_AZUL_COBALTO, "hovered": COLOR_AZUL_MEDIO},
                                             shape=ft.RoundedRectangleBorder(radius=6),
@@ -390,13 +388,14 @@ def login_view(page: ft.Page) -> ft.View:
                                 on_click=lambda _: switch_tab(1)
                             )
                         ],
-                        alignment=ft.MainAxisAlignment.END,  # fuerza todo hacia abajo
+                        alignment=ft.MainAxisAlignment.END,
                         horizontal_alignment=ft.CrossAxisAlignment.CENTER
                     ),
-                    alignment=ft.Alignment(0, 1)  # abajo y centrado
+                    alignment=ft.Alignment(0, 1)
                 ),
             ])
-        elif tab_index == 1:  # RESTABLECER
+        # ── Restablecer ──────────────────────────────────────────────────────
+        elif tab_index == 1:
             title_text.value = "Acceso Neusomic"
             form_container.controls.extend([
                 txt_reset_email,
@@ -425,7 +424,8 @@ def login_view(page: ft.Page) -> ft.View:
                     alignment=ft.Alignment(0, 1)
                 )
             ])
-        elif tab_index == 2:  # REGISTRO
+        # ── Registrar ──────────────────────────────────────────────────────
+        elif tab_index == 2:
             title_text.value = "Registro usuario"
             form_container.controls.extend([
                 ft.Container(
@@ -451,6 +451,14 @@ def login_view(page: ft.Page) -> ft.View:
                                             padding=ft.Padding(30, 12, 30, 12)
                                         ),
                                         on_click=handle_register
+                                    ),
+                                    ft.TextButton(
+                                        content=ft.Text(
+                                            "¿Registrar una vulcanizadora?",
+                                            size=12,
+                                            color=COLOR_NARANJA_AMBAR
+                                        ),
+                                        on_click=lambda _: switch_tab(3)
                                     )
                                 ],
                                 alignment=ft.MainAxisAlignment.CENTER
@@ -462,9 +470,53 @@ def login_view(page: ft.Page) -> ft.View:
                     alignment=ft.Alignment(0, 1)
                 )
             ])
+
+        elif tab_index == 3:
+
+            title_text.value = "Registro vulcanizadora"
+
+            form_container.controls.extend([
+
+                txt_vul_nombre,
+                txt_vul_telefono,
+                txt_vul_correo,
+                txt_vul_responsable,
+                txt_vul_direccion,
+                txt_vul_pass,
+                txt_vul_confirm,
+
+                ft.Row(
+                    controls=[
+                        ft.Button(
+                            content=ft.Text(
+                                "Registrar vulcanizadora",
+                                color=COLOR_BLANCO
+                            ),
+                            style=ft.ButtonStyle(
+                                bgcolor={
+                                    "": COLOR_AZUL_MEDIO,
+                                    "hovered": COLOR_AZUL_COBALTO
+                                }
+                            ),
+                            on_click=handle_register_vulcanizadora
+                        )
+                    ],
+                    alignment=ft.MainAxisAlignment.CENTER
+                ),
+
+                ft.TextButton(
+                    content=ft.Text(
+                        "Registrar usuario normal",
+                        size=12,
+                        color=COLOR_NARANJA_AMBAR
+                    ),
+                    on_click=lambda _: switch_tab(2)
+                )
+
+            ])
+
         page.update()
 
-    # Tabs
     btn_tab_ingresar = ft.TextButton("Ingresar", on_click=lambda _: switch_tab(0))
     btn_tab_restablecer = ft.TextButton("Restablecer", on_click=lambda _: switch_tab(1))
     btn_tab_registrar = ft.TextButton("Registrarse", on_click=lambda _: switch_tab(2))
@@ -477,8 +529,6 @@ def login_view(page: ft.Page) -> ft.View:
         ft.Divider(height=1, color="rgba(255,255,255,0.2)")
     ], spacing=0)
 
-    # TARJETA PRINCIPAL (MICA BLUR)
-    # TARJETA PRINCIPAL (MUY PEQUEÑA)
     glass_card = ft.Container(
         content=ft.Column(
             controls=[
@@ -514,7 +564,6 @@ def login_view(page: ft.Page) -> ft.View:
         )
     )
 
-    # FONDO SIN DEGRADADO (color sólido)
     center_body = ft.Container(
         content=ft.Column(
             controls=[glass_card],
@@ -522,7 +571,7 @@ def login_view(page: ft.Page) -> ft.View:
             horizontal_alignment=ft.CrossAxisAlignment.CENTER
         ),
         expand=True,
-        bgcolor=COLOR_AZUL_CIELO_INTENSO,  # fondo sólido en lugar de degradado
+        bgcolor=COLOR_AZUL_CIELO_INTENSO,
         alignment=ft.Alignment.CENTER,
         padding=20
     )
@@ -533,20 +582,20 @@ def login_view(page: ft.Page) -> ft.View:
             ft.Container(
                 content=ft.Image(
                     src="assets/images/logo.png",
-                    height=90,  # tamaño más grande del logo
+                    height=90,
                     fit=ft.BoxFit.CONTAIN
                 ),
-                expand=True,  # hace que el logo se adapte al ancho disponible
+                expand=True,
                 alignment=ft.Alignment(-1, 0)
             )
         ]),
         bgcolor=COLOR_AZUL_OXFORD,
         padding=ft.Padding(left=20, top=12, right=20, bottom=12),
         width=page.width,
-        height=90  # altura fija de la barra (no cambia aunque el logo sea más grande)
+        height=90
     )
 
-    # Footer
+    # ── Footer ──────────────────────────────────────────────────────
     footer = ft.Container(
         content=ft.Column([
             ft.Row([
@@ -571,7 +620,6 @@ def login_view(page: ft.Page) -> ft.View:
         padding=15
     )
 
-    # Zona Central con degradado sólido
     center_body = ft.Container(
         content=ft.Column(
             controls=[glass_card],
@@ -588,7 +636,6 @@ def login_view(page: ft.Page) -> ft.View:
         padding=20
     )
 
-    # Layout final responsive
     switch_tab(0)
 
     return ft.View(
@@ -615,9 +662,3 @@ def login_view(page: ft.Page) -> ft.View:
         ],
         padding=0
     )
-
-    # Vista por defecto
-    #switch_tab(0)
-
-
-#ft.run(main)

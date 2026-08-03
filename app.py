@@ -24,9 +24,20 @@ async def main(page: ft.Page):
     page.spacing = 0
 
 
-    # Navegación entre vistas
+    # ── Navegacion entre las vistas ──────────────────────────────────────────────────────
     async def navigate(route):
         await page.push_route(route)
+
+    async def logout():
+        # ── Limpiar datos de la sesión ──────────────────────────────────────────────────────
+        if hasattr(page, "empleado_id"):
+            delattr(page, "empleado_id")
+
+        if hasattr(page, "vulcanizadora_id"):
+            delattr(page, "vulcanizadora_id")
+
+
+        await page.push_route("/")
 
     def route_change(e):
 
@@ -44,7 +55,8 @@ async def main(page: ft.Page):
             page.views.append(
                 dashboard_admin(
                     page,
-                    on_navigate=navigate
+                    on_navigate=navigate,
+                    on_logout=logout
                 )
             )
 
@@ -185,12 +197,9 @@ async def main(page: ft.Page):
             page.route = page.views[-1].route
             page.update()
 
-
     page.on_route_change = route_change
     page.on_view_pop = view_pop
 
-
-    # Primera pantalla
     page.route = "/"
     route_change(None)
 

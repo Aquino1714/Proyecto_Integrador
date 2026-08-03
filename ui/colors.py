@@ -1,4 +1,4 @@
-# Paleta de colores del sistema
+# ── Paleta de colores del sistema ──────────────────────────────────────────────────────
 
 SIDEBAR_BG = "#1a2540"
 SIDEBAR_ACTIVE = "#f97316"
@@ -23,3 +23,14 @@ TEXT_SECONDARY = "#94a3b8"
 TEXT_MUTED = "#64748b"
 
 DIVIDER = "#2d3a50"
+
+# ── Colores del login ──────────────────────────────────────────────────────
+
+COLOR_AZUL_OXFORD = "#001F4E"
+COLOR_AZUL_COBALTO = "#0A2F8F"
+COLOR_AZUL_MEDIO = "#1E88E5"
+COLOR_NARANJA_AMBAR = "#FC8F1B"
+COLOR_GRIS_OSCURO = "#333333"
+COLOR_BLANCO = "#FFFFFF"
+COLOR_AZUL_CIELO_INTENSO = "#E0FFFF"
+

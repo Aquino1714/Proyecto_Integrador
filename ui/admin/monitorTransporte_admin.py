@@ -2,7 +2,7 @@ import flet as ft
 from datetime import date, time
 
 from ui.colors import *
-from ui.admin.dashboard_admin import sidebar, topbar   # se reutilizan del dashboard_admin
+from ui.admin.dashboard_admin import sidebar, topbar
 from dao.transporte_dao import TransportDAO
 
 

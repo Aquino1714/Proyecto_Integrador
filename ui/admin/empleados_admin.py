@@ -5,8 +5,8 @@ import flet as ft
 
 from ui.colors import *
 from dao.empleado_dao import EmpleadoDAO
-from models.empleado import Empleado  # ⚠️ asumido: acepta empleado_id=None + kwargs, igual que en get_all()
-from ui.admin.dashboard_admin import sidebar, topbar  # ← necesarios para armar la View
+from models.empleado import Empleado
+from ui.admin.dashboard_admin import sidebar, topbar
 
 ROLES_MAP = {
     1: "Administrador",
