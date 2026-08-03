@@ -1,3 +1,8 @@
+import flet as ft
+from ui.login_view import login_view
+#================
+
+
 from dao.rol_dao import RolDAO
 from dao.empleado_dao import EmpleadoDAO
 from models.empleados import Empleado
@@ -28,6 +33,23 @@ from models.recolecciones import Recoleccion
 
 from dao.inventario_entrada_dao import InventarioEntradaDAO
 from models.inventario_entrada import InventarioEntrada
+
+
+from dao.reportes_dao import ReporteDAO
+from models.reportes import Reporte
+
+
+from dao.bajas_inventario_dao import BajaInventarioDAO
+from models.bajas_inventario import BajaInventario
+
+
+#=========
+
+
+
+
+
+
 
 
 
@@ -1660,6 +1682,318 @@ def menu_inventario_entrada():
         case _:
             print("Opción no válida.")
 
+            #=====================================
+#reportes
+
+def ver_reportes():
+
+    try:
+
+        reporte_dao = ReporteDAO()
+
+        reportes = reporte_dao.obtener_todos()
+
+        print("===== REPORTES =====")
+
+        if len(reportes) == 0:
+
+            print("No hay registros.")
+
+        else:
+
+            for reporte in reportes:
+
+                print("==============================")
+                print(
+                    f"ID: {reporte.reporte_id}, "
+                    f"Vulcanizadora ID: {reporte.vulcanizadora_id}, "
+                    f"Cantidad de llantas: {reporte.cantidad_llantas}, "
+                    f"Fecha del reporte: {reporte.fecha_reporte}, "
+                    f"Estado: {reporte.estado}"
+                )
+                print("==============================")
+
+    except Exception as e:
+
+        print("Error:")
+        print(e)
+
+
+def insertar_reporte():
+
+    vulcanizadora_id = int(input("ID de la vulcanizadora: "))
+    cantidad_llantas = int(input("Cantidad de llantas: "))
+    estado = input("Estado: ")
+
+    try:
+
+        reporte_dao = ReporteDAO()
+
+        reporte = Reporte(
+
+            reporte_id=None,
+            vulcanizadora_id=vulcanizadora_id,
+            cantidad_llantas=cantidad_llantas,
+            fecha_reporte=None,
+            estado=estado
+
+        )
+
+        reporte_dao.insertar(reporte)
+
+        print("Reporte registrado correctamente.")
+
+    except Exception as e:
+
+        print("Error al insertar el reporte.")
+        print(e)
+
+
+def actualizar_reporte():
+
+    try:
+
+        reporte_dao = ReporteDAO()
+
+        ver_reportes()
+
+        reporte_id = int(input("ID del reporte a actualizar: "))
+
+        vulcanizadora_id = int(input("Nuevo ID de la vulcanizadora: "))
+        cantidad_llantas = int(input("Nueva cantidad de llantas: "))
+        estado = input("Nuevo estado: ")
+
+        reporte = Reporte(
+
+            reporte_id=reporte_id,
+            vulcanizadora_id=vulcanizadora_id,
+            cantidad_llantas=cantidad_llantas,
+            fecha_reporte=None,
+            estado=estado
+
+        )
+
+        reporte_dao.actualizar(reporte)
+
+        print("Reporte actualizado correctamente.")
+
+    except Exception as e:
+
+        print("Error al actualizar el reporte.")
+        print(e)
+
+
+def eliminar_reporte():
+
+    try:
+
+        reporte_dao = ReporteDAO()
+
+        ver_reportes()
+
+        reporte_id = int(input("ID del reporte a eliminar: "))
+
+        reporte_dao.eliminar(reporte_id)
+
+        print("Reporte eliminado correctamente.")
+
+    except Exception as e:
+
+        print("Error al eliminar el reporte.")
+        print(e)
+
+
+def menu_reportes():
+
+    print("===== REPORTES =====")
+    print("1. Ver reportes")
+    print("2. Insertar reporte")
+    print("3. Actualizar reporte")
+    print("4. Eliminar reporte")
+
+    opcion = int(input("Selecciona una opción: "))
+
+    match opcion:
+
+        case 1:
+            ver_reportes()
+
+        case 2:
+            insertar_reporte()
+
+        case 3:
+            actualizar_reporte()
+
+        case 4:
+            eliminar_reporte()
+
+        case _:
+            print("Opción no válida.")
+
+
+#======================}
+
+#bajas de inentario
+
+def ver_bajas_inventario():
+
+    try:
+
+        baja_dao = BajaInventarioDAO()
+
+        bajas = baja_dao.obtener_todos()
+
+        print("===== BAJAS DE INVENTARIO =====")
+
+        if len(bajas) == 0:
+
+            print("No hay registros.")
+
+        else:
+
+            for baja in bajas:
+
+                print("==============================")
+                print(
+                    f"ID: {baja.baja_inventario_id}, "
+                    f"Stock Producto ID: {baja.stock_producto_id}, "
+                    f"Cantidad (kg): {baja.cantidad_kg}, "
+                    f"Motivo: {baja.motivo}, "
+                    f"Fecha de baja: {baja.fecha_baja}"
+                )
+                print("==============================")
+
+    except Exception as e:
+
+        print("Error:")
+        print(e)
+
+
+def insertar_baja_inventario():
+
+    stock_producto_id = int(input("ID del stock de producto: "))
+    cantidad_kg = float(input("Cantidad (kg): "))
+    motivo = input("Motivo: ")
+
+    try:
+
+        baja_dao = BajaInventarioDAO()
+
+        baja = BajaInventario(
+
+            baja_inventario_id=None,
+            stock_producto_id=stock_producto_id,
+            cantidad_kg=cantidad_kg,
+            motivo=motivo,
+            fecha_baja=None
+
+        )
+
+        baja_dao.insertar(baja)
+
+        print("Baja registrada correctamente.")
+
+    except Exception as e:
+
+        print("Error al registrar la baja.")
+        print(e)
+
+
+def actualizar_baja_inventario():
+
+    try:
+
+        baja_dao = BajaInventarioDAO()
+
+        ver_bajas_inventario()
+
+        baja_inventario_id = int(input("ID de la baja a actualizar: "))
+
+        stock_producto_id = int(input("Nuevo ID del stock de producto: "))
+        cantidad_kg = float(input("Nueva cantidad (kg): "))
+        motivo = input("Nuevo motivo: ")
+
+        baja = BajaInventario(
+
+            baja_inventario_id=baja_inventario_id,
+            stock_producto_id=stock_producto_id,
+            cantidad_kg=cantidad_kg,
+            motivo=motivo,
+            fecha_baja=None
+
+        )
+
+        baja_dao.actualizar(baja)
+
+        print("Baja actualizada correctamente.")
+
+    except Exception as e:
+
+        print("Error al actualizar la baja.")
+        print(e)
+
+
+def eliminar_baja_inventario():
+
+    try:
+
+        baja_dao = BajaInventarioDAO()
+
+        ver_bajas_inventario()
+
+        baja_inventario_id = int(input("ID de la baja a eliminar: "))
+
+        baja_dao.eliminar(baja_inventario_id)
+
+        print("Baja eliminada correctamente.")
+
+    except Exception as e:
+
+        print("Error al eliminar la baja.")
+        print(e)
+
+
+def menu_bajas_inventario():
+
+    print("===== BAJAS DE INVENTARIO =====")
+    print("1. Ver bajas")
+    print("2. Insertar baja")
+    print("3. Actualizar baja")
+    print("4. Eliminar baja")
+
+    opcion = int(input("Selecciona una opción: "))
+
+    match opcion:
+
+        case 1:
+            ver_bajas_inventario()
+
+        case 2:
+            insertar_baja_inventario()
+
+        case 3:
+            actualizar_baja_inventario()
+
+        case 4:
+            eliminar_baja_inventario()
+
+        case _:
+            print("Opción no válida.")
+
+#================================
+
+
+import flet as ft
+from ui.login_view import login_view
+
+
+def main(page: ft.Page):
+
+    login_view(page)
+
+
+ft.app(target=main)
+
         
 
 
@@ -1669,68 +2003,78 @@ def menu_inventario_entrada():
 
 
 
-def main():
+#def main():
 
-    print("==Sistema Neusomic=====")
-    print("Menude opciones")
-    print("1. Gestión de Roles")
-    print("2. Gestión de Emleados")
-    print("3. Gestión de usuarios")
-    print("4. Gestión de clienes")
-    print("5. Gestión de Transportes")
-    print("6. Gestión de Stock de Productos")
-    print("7. Gestión de Lotes")
-    print("8. Gestión de Materiales")
-    print("9. Gestión de Neumáticos")
-    print("10. Gestión de Rcolecciones")
-    print("11. Gestión de inventario de entrada")
+    # print("==Sistema Neusomic=====")
+    # print("Menude opciones")
+    # print("1. Gestión de Roles")
+    # print("2. Gestión de Emleados")
+    # print("3. Gestión de usuarios")
+    # print("4. Gestión de clienes")
+    # print("5. Gestión de Transportes")
+    # print("6. Gestión de Stock de Productos")
+    # print("7. Gestión de Lotes")
+    # print("8. Gestión de Materiales")
+    # print("9. Gestión de Neumáticos")
+    # print("10. Gestión de Rcolecciones")
+    # print("11. Gestión de inventario de entrada")
+    # print("12. Gestión de reportes")
+    # print("13.  Gestión de bajas de inentario")
 
-    try:
+    # try:
 
-        opcion = int(input("Selecciona una opción general (1-11: "))
+    #     opcion = int(input("Selecciona una opción general (1-11: "))
 
-        match opcion:
+    #     match opcion:
 
-            case 1:
-                menu_roles()
+    #         case 1:
+    #             menu_roles()
 
-            case 2:
-                menu_empleados()
+    #         case 2:
+    #             menu_empleados()
 
-            case 3:
-                menu_usuarios()
+    #         case 3:
+    #             menu_usuarios()
 
-            case 4:
-                menu_clientes()
+    #         case 4:
+    #             menu_clientes()
 
-            case 5:
-                menu_transportes()
+    #         case 5:
+    #             menu_transportes()
             
-            case 6:
-                menu_stock_productos()
+    #         case 6:
+    #             menu_stock_productos()
 
-            case 7:
-                menu_lotes()
+    #         case 7:
+    #             menu_lotes()
             
-            case 8:
-                menu_materiales()
+    #         case 8:
+    #             menu_materiales()
 
-            case 9:
-                menu_neumaticos()
+    #         case 9:
+    #             menu_neumaticos()
 
-            case 10:
-                menu_recolecciones()
+    #         case 10:
+    #             menu_recolecciones()
 
-            case 11:
-                menu_inventario_entrada()
+    #         case 11:
+    #             menu_inventario_entrada()
 
-            case _:
-                print("Opción no valida.")
+    #         case 12:
+    #             menu_reportes()
+
+    #         case 13:
+    #             menu_bajas_inventario()
+
+    #         case _:
+    #             print("Opción no valida.")
 
 
-    except ValueError:
-        print("Por favor introduzca un numero valido.")
 
 
-if __name__ == "__main__":
-    main()
+    #except ValueError:
+    #    print("Por favor introduzca un numero valido.")
+
+
+#if __name__ == "__main__":
+ #   main()
