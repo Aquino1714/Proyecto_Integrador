@@ -1983,16 +1983,34 @@ def menu_bajas_inventario():
 #================================
 
 
+
+
+
 import flet as ft
 from ui.login_view import login_view
 
 
 def main(page: ft.Page):
-
     login_view(page)
 
 
-ft.app(target=main)
+if __name__ == "__main__":
+    ft.run(main)
+
+# Dentro de login_view.py
+
+def iniciar_sesion_click(e):
+    # Aquí puedes validar tus DAO / Base de datos primero:
+    # usuario_valido = usuario_dao.login(txt_usuario.value, txt_password.value)
+    
+    # 1. Limpias los elementos actuales de la página
+    page.clean()
+    
+    # 2. Cargas la vista del Dashboard (admin_view)
+    admin_view(page)
+
+# Asignas la función al botón:
+#btn_ingresar.on_click = iniciar_sesion_click
 
         
 
