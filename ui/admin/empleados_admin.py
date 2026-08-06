@@ -49,7 +49,7 @@ def badge_rol(rol: str):
     )
 
 
-def buscador_empleado():
+def buscador_empleado(on_buscar=None):
     return ft.TextField(
         hint_text="Buscar Empleado",
         prefix_icon=ft.Icons.SEARCH,
@@ -59,8 +59,8 @@ def buscador_empleado():
         content_padding=ft.Padding.symmetric(horizontal=14, vertical=10),
         text_size=13,
         expand=True,
+        on_change=on_buscar
     )
-
 
 def boton_nuevo_empleado(on_nuevo_empleado=None):
     return ft.ElevatedButton(
@@ -678,13 +678,58 @@ def empleados_content(page: ft.Page, on_nuevo_empleado=None, on_ver_detalle=None
     tabla_wrapper_ref = ft.Ref[ft.Container]()
     contador_ref = ft.Ref[ft.Text]()
 
+    busqueda_actual = ""
+    rol_actual = None
+
+    def actualizar_tabla():
+        lista = EmpleadoDAO().get_all()
+
+        if busqueda_actual:
+            texto = busqueda_actual.lower()
+
+            lista = [
+                e for e in lista
+                if texto in e.name.lower()
+                   or texto in e.aPaterno.lower()
+                   or texto in e.email.lower()
+            ]
+
+        if rol_actual:
+            lista = [
+                e for e in lista
+                if ROLES_MAP.get(e.id_rol) == rol_actual
+            ]
+
+        tabla_wrapper_ref.current.content = tabla_empleados(
+            lista,
+            manejar_click_fila
+        )
+
+        tabla_wrapper_ref.current.update()
+
+        contador_ref.current.value = f"{len(lista)} elementos"
+        contador_ref.current.update()
+
     def _refrescar_lista():
+        actualizar_tabla()
         nuevos = EmpleadoDAO().get_all()
         tabla_wrapper_ref.current.content = tabla_empleados(nuevos, manejar_click_fila)
         tabla_wrapper_ref.current.update()
         if contador_ref.current:
             contador_ref.current.value = f"{len(nuevos)} elementos"
             contador_ref.current.update()
+
+    def buscar_empleado(e):
+        nonlocal busqueda_actual
+
+        busqueda_actual = e.control.value
+        actualizar_tabla()
+
+    def aplicar_filtro(rol):
+        nonlocal rol_actual
+
+        rol_actual = rol
+        actualizar_tabla()
 
     async def _swap_contenido(nuevo_control):
         modal_card_ref.current.opacity = 0
@@ -858,11 +903,14 @@ def empleados_content(page: ft.Page, on_nuevo_empleado=None, on_ver_detalle=None
                 content=ft.Column(
                     controls=[
                         ft.Row(
-                            controls=[buscador_empleado(), boton_nuevo_empleado(manejar_click_nuevo)],
+                            controls=[
+                                buscador_empleado(buscar_empleado),
+                                boton_nuevo_empleado(manejar_click_nuevo)
+                            ],
                             spacing=12,
                         ),
                         ft.Container(height=12),
-                        filtro_row(),
+                        filtro_row(aplicar_filtro),
                         ft.Container(height=12),
                         ft.Row(
                             controls=[
