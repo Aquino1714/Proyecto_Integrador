@@ -2,10 +2,12 @@ import asyncio
 from datetime import date
 
 import flet as ft
+from datetime import datetime
 
 from ui.colors import *
 from dao.empleado_dao import EmpleadoDAO
 from models.empleado import Empleado
+from ui.notifications import NotificationManager
 from ui.admin.dashboard_admin import sidebar, topbar
 
 ROLES_MAP = {
@@ -319,15 +321,18 @@ def campo_editable(label: str, value: str):
     )
 
 
-def formulario_editar_empleado(emp, on_guardar=None, on_cancelar=None):
+def formulario_editar_empleado(page: ft.Page, emp, on_guardar=None, on_cancelar=None):
     nombre_field = campo_editable("Nombre", emp.name)
     apaterno_field = campo_editable("Apellido paterno", emp.aPaterno)
     amaterno_field = campo_editable("Apellido materno", emp.aMaterno)
 
-    fecha_nac_field = campo_editable(
+    fecha_nac_field, fecha_box = campo_fecha(
+        page,
         "Fecha de nacimiento",
-        str(emp.fecha_nacimiento) if emp.fecha_nacimiento else "",
+        str(emp.fecha_nacimiento)
+        if emp.fecha_nacimiento else "",
     )
+
     telefono_field = campo_editable("Teléfono", emp.phone or "")
     correo_field = campo_editable("Correo electrónico", emp.email)
 
@@ -409,7 +414,13 @@ def formulario_editar_empleado(emp, on_guardar=None, on_cancelar=None):
                 ft.Divider(height=1, color=DIVIDER),
                 ft.Row(controls=[nombre_field], spacing=10),
                 ft.Row(controls=[apaterno_field, amaterno_field], spacing=10),
-                ft.Row(controls=[fecha_nac_field, telefono_field], spacing=10),
+                ft.Row(
+                    controls=[
+                        fecha_box,
+                        telefono_field
+                    ],
+                    spacing=10
+                ),
                 correo_field,
                 ft.Row(controls=[rol_dropdown, turno_dropdown], spacing=10),
                 activo_switch,
@@ -442,7 +453,6 @@ def formulario_editar_empleado(emp, on_guardar=None, on_cancelar=None):
 
 # ── Formulario de creación "Nuevo empleado" (modal) ─────────────────────────
 def campo_nuevo(label: str, hint: str, password: bool = False):
-    """Devuelve (field, layout): field para leer el valor, layout para insertar en la grilla."""
     field = ft.TextField(
         hint_text=hint,
         password=password,
@@ -454,6 +464,7 @@ def campo_nuevo(label: str, hint: str, password: bool = False):
         content_padding=ft.Padding.symmetric(horizontal=12, vertical=10),
         expand=True,
     )
+
     layout = ft.Column(
         spacing=4,
         expand=True,
@@ -462,16 +473,64 @@ def campo_nuevo(label: str, hint: str, password: bool = False):
             field,
         ],
     )
+
     return field, layout
 
 
-def formulario_nuevo_empleado(on_guardar=None, on_cancelar=None):
+
+def campo_fecha(page: ft.Page, label: str, valor_inicial: str = ""):
+    fecha_field = ft.TextField(
+        value=valor_inicial,
+        hint_text="Selecciona una fecha",
+        read_only=True,
+        expand=True,
+        border_radius=8,
+        border_color=DIVIDER,
+        bgcolor=CARD_BG,
+    )
+
+    picker = ft.DatePicker(
+        first_date=datetime(1900, 1, 1),
+        last_date=datetime(2100, 12, 31),
+    )
+
+    def fecha_seleccionada(e):
+        if e.control.value:
+            fecha_field.value = e.control.value.strftime("%Y-%m-%d")
+            fecha_field.update()
+
+    picker.on_change = fecha_seleccionada
+
+    layout = ft.Column(
+        expand=True,
+        spacing=4,
+        controls=[
+            ft.Text(label, size=12, color=TEXT_SECONDARY),
+            ft.Row(
+                controls=[
+                    fecha_field,
+                    ft.IconButton(
+                        icon=ft.Icons.CALENDAR_MONTH,
+                        on_click=lambda e: page.show_dialog(picker),
+                    ),
+                ]
+            ),
+        ],
+    )
+
+    return fecha_field, layout
+
+
+
+def formulario_nuevo_empleado(page: ft.Page, on_guardar=None, on_cancelar=None, on_error=None):
     nombre_field, nombre_box = campo_nuevo("Nombres:", "Nombre")
     apaterno_field, apaterno_box = campo_nuevo("Apellido paterno:", "Apellido paterno")
     amaterno_field, amaterno_box = campo_nuevo("Apellido materno:", "Apellido materno")
     correo_field, correo_box = campo_nuevo("Correo electrónico:", "ejemplo02@neusomic.com")
-    # ⚠️ formato asumido DD/MM/AAAA como texto libre (igual que en el formulario de edición)
-    fecha_nac_field, fecha_nac_box = campo_nuevo("Fecha de nacimiento:", "DD/MM/AAAA")
+    fecha_nac_field, fecha_nac_box = campo_fecha(
+        page,
+        "Fecha de nacimiento"
+    )
     telefono_field, telefono_box = campo_nuevo("Teléfono:", "10 dígitos")
     password_field, password_box = campo_nuevo("Contraseña:", "Contraseña", password=True)
 
@@ -506,9 +565,11 @@ def formulario_nuevo_empleado(on_guardar=None, on_cancelar=None):
             rol_dropdown.value,
         ]
         if not all(campos_obligatorios):
-            error_text.value = "Completa nombres, apellido paterno, correo, contraseña y rol."
-            error_text.visible = True
-            error_text.update()
+
+            if on_error:
+                on_error(
+                    "Completa todos los campos obligatorios."
+                )
             return
 
         datos_nuevos = {
@@ -671,6 +732,7 @@ def dialogo_dar_baja(emp, on_confirmar=None, on_cancelar=None):
 # ── Contenido de Empleados (área central + modal animado) ──────────────────
 def empleados_content(page: ft.Page, on_nuevo_empleado=None, on_ver_detalle=None):
     empleados = EmpleadoDAO().get_all()
+    notifications = NotificationManager(page)
 
     modal_overlay_ref = ft.Ref[ft.Container]()
     modal_backdrop_ref = ft.Ref[ft.Container]()
@@ -755,7 +817,7 @@ def empleados_content(page: ft.Page, on_nuevo_empleado=None, on_ver_detalle=None
     def ir_a_editar(emp):
         page.run_task(
             _swap_contenido,
-            formulario_editar_empleado(emp, on_guardar=guardar_edicion, on_cancelar=cerrar_modal),
+            formulario_editar_empleado(page, emp, on_guardar=guardar_edicion, on_cancelar=cerrar_modal),
         )
 
     def ir_a_baja(emp):
@@ -775,21 +837,32 @@ def empleados_content(page: ft.Page, on_nuevo_empleado=None, on_ver_detalle=None
         emp_actualizado.turno = datos["turno"]
         emp_actualizado.id_rol = datos["id_rol"]
         emp_actualizado.active = datos["active"]
-        # ⚠️ password_hash se reenvía tal cual para no perder el password actual,
-        # pero EmpleadoDAO.update() lo vuelve a hashear -> ROMPE EL LOGIN.
-        # Pendiente resolver en el DAO (ver nota en mensajes anteriores).
+
         EmpleadoDAO().update(emp_actualizado)
+
+        page.run_task(
+            notifications.show,
+            "Empleado actualizado correctamente.",
+            "success"
+        )
+
         _refrescar_lista()
         cerrar_modal()
 
     def confirmar_baja(empleado_id, motivo):
         EmpleadoDAO().unsubscribe(empleado_id, motivo, date.today())
+
+        page.run_task(
+            notifications.show,
+            "Empleado dado de baja.",
+            "success"
+        )
+
         _refrescar_lista()
         cerrar_modal()
 
     def guardar_nuevo(datos):
-        # ⚠️ password_hash recibe el texto plano a propósito:
-        # EmpleadoDAO.insert() lo hashea internamente (a diferencia de update()).
+
         nuevo = Empleado(
             empleado_id=None,
             name=datos["name"],
@@ -807,6 +880,13 @@ def empleados_content(page: ft.Page, on_nuevo_empleado=None, on_ver_detalle=None
             turno=datos["turno"],
         )
         EmpleadoDAO().insert(nuevo)
+
+        page.run_task(
+            notifications.show,
+            "Empleado registrado correctamente.",
+            "success"
+        )
+
         _refrescar_lista()
         cerrar_modal()
 
@@ -836,7 +916,7 @@ def empleados_content(page: ft.Page, on_nuevo_empleado=None, on_ver_detalle=None
 
     def abrir_nuevo(e=None):
         async def _abrir():
-            formulario = formulario_nuevo_empleado(on_guardar=guardar_nuevo, on_cancelar=cerrar_modal)
+            formulario = formulario_nuevo_empleado(page, on_guardar=guardar_nuevo, on_cancelar=cerrar_modal)
             modal_card_ref.current.content = formulario
             modal_overlay_ref.current.visible = True
             modal_card_ref.current.scale = 0.85
@@ -936,6 +1016,7 @@ def empleados_content(page: ft.Page, on_nuevo_empleado=None, on_ver_detalle=None
             ),
             boton_informacion(),
             modal_overlay,
+            notifications.get_layer(),
         ],
         expand=True,
     )
