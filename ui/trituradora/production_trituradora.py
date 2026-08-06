@@ -1144,7 +1144,7 @@ def dialogo_dar_baja(lote, on_confirmar=None, on_cancelar=None):
         ),
     )
 
-# ────────────────── Contenido de Lotes (área central + modal animado) ──────────────────
+# ────────────────── Contenido de Lotes ──────────────────
 
 def lotes_content(page: ft.Page, on_nuevo_lote=None, on_ver_detalle_lote=None):
 
@@ -1426,7 +1426,7 @@ def lotes_content(page: ft.Page, on_nuevo_lote=None, on_ver_detalle_lote=None):
         )
 
 
-def production_trituradora(page: ft.Page, on_navigate=None, on_nuevo_lote=None, on_ver_detalle=None):
+def production_trituradora(page: ft.Page, on_navigate=None, on_nuevo_lote=None, on_ver_detalle=None, on_logout=None):
     active_route = "/produccion"
 
     return ft.View(
@@ -1439,7 +1439,7 @@ def production_trituradora(page: ft.Page, on_navigate=None, on_nuevo_lote=None, 
                     topbar(page, active_route),
                     ft.Row(
                         controls=[
-                            sidebar(active_route=active_route, on_navigate=on_navigate),
+                            sidebar(active_route=active_route, on_navigate=on_navigate, on_logout=on_logout),
                             ft.Container(
                                 content=lotes_content(page, on_nuevo_lote, on_ver_detalle),
                                 expand=True,

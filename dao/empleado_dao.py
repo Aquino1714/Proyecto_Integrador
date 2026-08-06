@@ -275,7 +275,3 @@ class EmpleadoDAO:
             return empleado
 
         return None
-
-
-
-    

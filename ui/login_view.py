@@ -203,7 +203,11 @@ def login_view(page: ft.Page) -> ft.View:
     async def handle_reset(e):
         email = txt_reset_email.value
         if email:
-            page.open(ft.SnackBar(ft.Text(f"Solicitud enviada a: {email}"), bgcolor=COLOR_AZUL_MEDIO))
+            await mostrar_notificacion("Lo sentimos esta función aun no esta disponible")
+            #await mostrar_notificacion(
+            #    f"Solicitud enviada a: {email}",
+            #    "success"
+            #)
         else:
             await mostrar_notificacion("Ingrese su correo electrónico", "error")
 

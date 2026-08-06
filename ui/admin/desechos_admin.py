@@ -4,6 +4,7 @@ import flet as ft
 
 from ui.colors import *
 from dao.reporteVul_dao import ReportVulDAO
+from ui.notifications import NotificationManager
 from ui.admin.dashboard_admin import sidebar, topbar
 
 ESTADO_COLORES = {
@@ -62,7 +63,6 @@ def accion_reporte(rep, on_asignar=None):
             ],
             spacing=6,
         )
-    # Cancelado (histórico; el flujo nuevo ya no genera este estado desde la UI)
     return ft.Text("Cancelado", size=12, color="#9ca3af", weight=ft.FontWeight.W_600)
 
 
@@ -395,9 +395,11 @@ def boton_informacion():
     )
 
 
-# ── Contenido central: bandeja + modal animado (estilo Mac, blur cristalino) ─
+# ── Contenido central─────────────────────────────────
 def desechos_content(page: ft.Page):
     reportes = ReportVulDAO().get_all_admin()
+
+    notify = NotificationManager(page)
 
     modal_overlay_ref = ft.Ref[ft.Container]()
     modal_backdrop_ref = ft.Ref[ft.Container]()
@@ -572,13 +574,14 @@ def desechos_content(page: ft.Page):
             ),
             boton_informacion(),
             modal_overlay,
+            notify.get_layer()
         ],
         expand=True,
     )
 
 
-# ── Vista completa (conectada a sidebar/topbar) ─────────────────────────────
-def desechos_admin(page: ft.Page, on_navigate=None):
+# ── Vista completa─────────────────────────────
+def desechos_admin(page: ft.Page, on_navigate=None, on_logout=None):
     active_route = "/desechos"
 
     return ft.View(
@@ -591,7 +594,7 @@ def desechos_admin(page: ft.Page, on_navigate=None):
                     topbar(page, active_route),
                     ft.Row(
                         controls=[
-                            sidebar(active_route=active_route, on_navigate=on_navigate),
+                            sidebar(active_route=active_route, on_navigate=on_navigate, on_logout=on_logout),
                             ft.Container(
                                 content=desechos_content(page),
                                 expand=True,

@@ -45,7 +45,7 @@ def badge_estado(estado: str):
     )
 
 
-def buscador_transporte():
+def buscador_transporte(on_buscar=None):
     return ft.TextField(
         hint_text="Buscar transporte por nombre, modelo, placas",
         tooltip="Busca un transporte por placas, marca o modelo",
@@ -56,7 +56,9 @@ def buscador_transporte():
         content_padding=ft.Padding.symmetric(horizontal=14, vertical=10),
         text_size=13,
         expand=True,
+        on_change=lambda e: on_buscar(e.control.value) if on_buscar else None,
     )
+
 
 
 def boton_nuevo_transporte(on_nuevo_transporte=None):
@@ -305,10 +307,13 @@ def tarjeta_transporte(t: Transport, es_centro: bool, on_ver_detalle=None, on_ed
     )
 
 
-# ── Carrusel estilo "dock de macOS" ──────────────────────────────────────────
-def carrusel_transportes(page: ft.Page, on_ver_detalle=None, on_editar=None):
+# ── Carrusel ──────────────────────────────────────────
+def carrusel_transportes(page: ft.Page, transportes, on_ver_detalle=None, on_editar=None):
 
-    estado = {"transportes": TransportDAO().get_all(), "indice": 0}
+    estado = {
+        "transportes": transportes.copy(),
+        "indice": 0
+    }
 
     stack_ref = ft.Ref[ft.Stack]()
     paginador_ref = ft.Ref[ft.Container]()
@@ -380,7 +385,6 @@ def carrusel_transportes(page: ft.Page, on_ver_detalle=None, on_editar=None):
             )
             tarjetas.append((abs(distancia), tarjeta))
 
-        # La tarjeta central se dibuja al final para quedar por encima del resto.
         tarjetas.sort(key=lambda par: -par[0])
         return [tarjeta for _, tarjeta in tarjetas]
 
@@ -430,6 +434,11 @@ def carrusel_transportes(page: ft.Page, on_ver_detalle=None, on_editar=None):
         estado["indice"] = min(estado["indice"], max(0, len(estado["transportes"]) - 1))
         _redibujar()
 
+    def actualizar_lista(nueva_lista):
+        estado["transportes"] = nueva_lista.copy()
+        estado["indice"] = 0
+        _redibujar()
+
     contenido = ft.Column(
         spacing=16,
         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
@@ -467,7 +476,8 @@ def carrusel_transportes(page: ft.Page, on_ver_detalle=None, on_editar=None):
         ],
     )
 
-    return contenido, refrescar_datos, ir_a
+    return contenido, refrescar_datos, ir_a, actualizar_lista
+
 # ── Tarjeta de detalle (modal) ───────────────────────────────────────────────
 def detalle_transporte_card(t: Transport, on_cerrar=None, on_dar_baja=None, on_guardar=None):
 
@@ -523,7 +533,7 @@ def detalle_transporte_card(t: Transport, on_cerrar=None, on_dar_baja=None, on_g
             spacing=18,
             controls=[
 
-                # ---------- Encabezado ----------
+                #─────────Encabezado───────────────────
                 ft.Row(
                     controls=[
                         ft.Text(
@@ -545,7 +555,7 @@ def detalle_transporte_card(t: Transport, on_cerrar=None, on_dar_baja=None, on_g
 
                 ft.Divider(color=DIVIDER),
 
-                # ---------- Contenido ----------
+                # ─────Contenido───────────────────────
                 ft.Row(
                     spacing=35,
                     vertical_alignment=ft.CrossAxisAlignment.START,
@@ -588,7 +598,7 @@ def detalle_transporte_card(t: Transport, on_cerrar=None, on_dar_baja=None, on_g
 
                 ft.Divider(color=DIVIDER),
 
-                # ---------- Botones ----------
+                #────Botones──────────────────────────────
                 ft.Row(
                     controls=[
 
@@ -824,7 +834,7 @@ def formulario_nuevo_transporte(on_guardar=None, on_cancelar=None, file_picker=N
             tight=True,
             controls=[
 
-                # Encabezado
+                #───────Encabezado──────────────────────────────
                 ft.Row(
                     controls=[
                         ft.Text(
@@ -845,7 +855,7 @@ def formulario_nuevo_transporte(on_guardar=None, on_cancelar=None, file_picker=N
 
                 ft.Divider(color=DIVIDER),
 
-                # Contenido
+                #─────── Contenido────────────────────────────────────
                 ft.Row(
                     spacing=30,
                     vertical_alignment=ft.CrossAxisAlignment.START,
@@ -1025,23 +1035,38 @@ def dialogo_dar_baja_transporte(t: Transport, on_confirmar=None, on_cancelar=Non
     )
 
 
-# ── Contenido de Transporte (área central + modal animado) ─────────────────
+# ── Contenido de Transporte ─────────────────
 def transportes_content(page: ft.Page, on_nuevo_transporte=None, on_ver_detalle=None):
     modal_overlay_ref = ft.Ref[ft.Container]()
     modal_backdrop_ref = ft.Ref[ft.Container]()
     modal_card_ref = ft.Ref[ft.Container]()
 
+    transportes = TransportDAO().get_all()
+
     page.overlay.clear()
 
-    #file_picker = ft.FilePicker()
-
-    #page.overlay.append(file_picker)
-
-    contenido_carrusel, refrescar_datos, ir_a = carrusel_transportes(
+    contenido_carrusel, refrescar_datos, ir_a, actualizar_lista = carrusel_transportes(
         page,
+        transportes,
         on_ver_detalle=lambda t: manejar_ver_detalle(t),
         on_editar=lambda t: ir_a_editar(t),
     )
+
+    def buscar_transporte(texto):
+        texto = texto.lower().strip()
+
+        if texto == "":
+            actualizar_lista(transportes)
+            return
+
+        resultado = [
+            t for t in transportes
+            if texto in (t.placas or "").lower()
+               or texto in (t.marca or "").lower()
+               or texto in (t.modelo or "").lower()
+        ]
+
+        actualizar_lista(resultado)
 
     async def _swap_contenido(nuevo_control):
         modal_card_ref.current.opacity = 0
@@ -1098,8 +1123,6 @@ def transportes_content(page: ft.Page, on_nuevo_transporte=None, on_ver_detalle=
         )
 
     def guardar_edicion(t: Transport, datos):
-        # ⚠️ Se reutiliza el objeto `t` ya cargado en memoria porque
-        # TransportDAO no expone get_by_id().
         t.placas = datos["placas"]
         t.modelo = datos["modelo"]
         t.marca = datos["marca"]
@@ -1111,8 +1134,6 @@ def transportes_content(page: ft.Page, on_nuevo_transporte=None, on_ver_detalle=
         cerrar_modal()
 
     def confirmar_baja(t: Transport, motivo: str):
-        # ⚠️ TransportDAO.delete() borra el registro físicamente; el motivo
-        # no se persiste porque no hay un método de baja lógica en el DAO.
         TransportDAO().delete(t.transporte_id)
         refrescar_datos()
         cerrar_modal()
@@ -1202,7 +1223,10 @@ def transportes_content(page: ft.Page, on_nuevo_transporte=None, on_ver_detalle=
                 content=ft.Column(
                     controls=[
                         ft.Row(
-                            controls=[buscador_transporte(), boton_nuevo_transporte(manejar_click_nuevo)],
+                            controls=[
+                                buscador_transporte(buscar_transporte),
+                                boton_nuevo_transporte(manejar_click_nuevo)
+                            ],
                             spacing=12,
                         ),
                         ft.Container(height=30),
@@ -1220,7 +1244,7 @@ def transportes_content(page: ft.Page, on_nuevo_transporte=None, on_ver_detalle=
     )
 
 
-def transportes_admin(page: ft.Page, on_navigate=None, on_nuevo_transporte=None, on_ver_detalle=None):
+def transportes_admin(page: ft.Page, on_navigate=None, on_nuevo_transporte=None, on_ver_detalle=None, on_logout=None):
     active_route = "/transporte"
 
     return ft.View(
@@ -1233,7 +1257,7 @@ def transportes_admin(page: ft.Page, on_navigate=None, on_nuevo_transporte=None,
                     topbar(page, active_route),
                     ft.Row(
                         controls=[
-                            sidebar(active_route=active_route, on_navigate=on_navigate),
+                            sidebar(active_route=active_route, on_navigate=on_navigate, on_logout=on_logout),
                             ft.Container(
                                 content=transportes_content(page, on_nuevo_transporte, on_ver_detalle),
                                 expand=True,

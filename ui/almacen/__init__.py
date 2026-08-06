@@ -1,2 +1,3 @@
 from .Dashboard_almacen import dashboard_almacen
 from .reportes_almacen import reportes_almacen
+from .Inventario_almacen import panel_inventario

@@ -66,7 +66,8 @@ async def main(page: ft.Page):
             page.views.append(
                 dashboard_trituradora(
                     page,
-                    on_navigate=navigate
+                    on_navigate=navigate,
+                    on_logout=logout
                 )
             )
 
@@ -75,7 +76,8 @@ async def main(page: ft.Page):
             page.views.append(
                 dashboard_vulcanizadora(
                     page,
-                    on_navigate=navigate
+                    on_navigate=navigate,
+                    on_logout=logout
                 )
             )
 
@@ -85,7 +87,8 @@ async def main(page: ft.Page):
             page.views.append(
                 empleados_admin(
                     page,
-                    on_navigate=navigate
+                    on_navigate=navigate,
+                    on_logout=logout
                 )
             )
 
@@ -95,7 +98,8 @@ async def main(page: ft.Page):
             page.views.append(
                 monitor_transporte(
                     page,
-                    on_navigate=navigate
+                    on_navigate=navigate,
+                    on_logout=logout
                 )
             )
 
@@ -104,7 +108,18 @@ async def main(page: ft.Page):
             page.views.append(
                 desechos_admin(
                     page,
-                    on_navigate=navigate
+                    on_navigate=navigate,
+                    on_logout=logout
+                )
+            )
+
+        elif page.route == "/inventario":
+
+            page.views.append(
+                panel_inventario(
+                    page,
+                    on_navigate=navigate,
+                    on_logout=logout
                 )
             )
 
@@ -113,7 +128,8 @@ async def main(page: ft.Page):
             page.views.append(
                 reportes_empleados_admin(
                     page,
-                    on_navigate=navigate
+                    on_navigate=navigate,
+                    on_logout=logout
                 )
             )
 
@@ -122,7 +138,8 @@ async def main(page: ft.Page):
             page.views.append(
                 transportes_admin (
                     page,
-                    on_navigate=navigate
+                    on_navigate=navigate,
+                    on_logout=logout
                 )
             )
 
@@ -131,7 +148,8 @@ async def main(page: ft.Page):
             page.views.append(
                 production_trituradora(
                     page,
-                    on_navigate=navigate
+                    on_navigate=navigate,
+                    on_logout=logout
                 )
             )
         elif page.route == "/maquinaria":
@@ -139,7 +157,8 @@ async def main(page: ft.Page):
             page.views.append(
                 equipos_triturador(
                     page,
-                    on_navigate=navigate
+                    on_navigate=navigate,
+                    on_logout=logout
                 )
             )
         elif page.route == "/reporte":
@@ -148,14 +167,16 @@ async def main(page: ft.Page):
                 reportes_trituracion(
                     page,
                     empleado_id,
-                    on_navigate=navigate
+                    on_navigate=navigate,
+                    on_logout=logout
                 )
             )
         elif page.route == "/dashboard_almacen":
             page.views.append(
                 dashboard_almacen(
                     page,
-                    on_navigate=navigate
+                    on_navigate=navigate,
+                    on_logout=logout
                 )
             )
         elif page.route == "/reportes_almacen":
@@ -164,7 +185,8 @@ async def main(page: ft.Page):
                 reportes_almacen(
                     page,
                     empleado_id,
-                    on_navigate=navigate
+                    on_navigate=navigate,
+                    on_logout=logout
                 )
             )
 
@@ -172,7 +194,8 @@ async def main(page: ft.Page):
             page.views.append(
                 solicitud_apoyo(
                     page,
-                    on_navigate=navigate
+                    on_navigate=navigate,
+                    on_logout=logout
                 )
             )
 
@@ -182,11 +205,13 @@ async def main(page: ft.Page):
                 reportes_vulcanizadora(
                     page,
                     vulcanizadora_id,
-                    on_navigate=navigate
+                    on_navigate=navigate,
+                    on_logout=logout
                 )
             )
 
         page.update()
+
 
     def view_pop(e):
 

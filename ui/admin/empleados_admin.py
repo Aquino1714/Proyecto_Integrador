@@ -893,7 +893,7 @@ def empleados_content(page: ft.Page, on_nuevo_empleado=None, on_ver_detalle=None
     )
 
 
-def empleados_admin(page: ft.Page, on_navigate=None, on_nuevo_empleado=None, on_ver_detalle=None):
+def empleados_admin(page: ft.Page, on_navigate=None, on_nuevo_empleado=None, on_ver_detalle=None, on_logout=None):
     active_route = "/usuarios"
 
     return ft.View(
@@ -906,7 +906,7 @@ def empleados_admin(page: ft.Page, on_navigate=None, on_nuevo_empleado=None, on_
                     topbar(page, active_route),
                     ft.Row(
                         controls=[
-                            sidebar(active_route=active_route, on_navigate=on_navigate),
+                            sidebar(active_route=active_route, on_navigate=on_navigate, on_logout=on_logout),
                             ft.Container(
                                 content=empleados_content(page, on_nuevo_empleado, on_ver_detalle),
                                 expand=True,

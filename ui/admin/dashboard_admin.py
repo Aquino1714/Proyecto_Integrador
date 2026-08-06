@@ -13,11 +13,9 @@ from ui.admin.components import (
 # ── Sidebar ──────────────────────────────────────────────────────────────────
 def sidebar(active_route: str = "/dashboard_admin", on_navigate=None, on_logout=None):
     items = [
-        # ("/dashboard", "", ft.Icons.HOME_OUTLINED, False),
         ("/dashboard_admin", "Administrador", ft.Icons.ADMIN_PANEL_SETTINGS_OUTLINED, True),
         ("/usuarios", "Empleados", ft.Icons.BADGE_OUTLINED, False),
         ("/neumaticos", "Monitor\ntransporte", ft.Icons.LOCAL_SHIPPING_OUTLINED, False),
-        # ("/recoleccion", "Resi", ft.Icons.LOCAL_SHIPPING_OUTLINED, False),
         ("/desechos", "Reportes \ndesechos", ft.Icons.DELETE_OUTLINED, False),
         ("/reportes", "Reportes", ft.Icons.ANALYTICS_OUTLINED, False),
         ("/transporte", "Transporte", ft.Icons.DIRECTIONS_BUS_OUTLINED, False),
@@ -100,10 +98,18 @@ def sidebar(active_route: str = "/dashboard_admin", on_navigate=None, on_logout=
 
 # ── Modal "Sobre nosotros" ────────────────────────────────────────────────────
 def about_dialog(page: ft.Page):
+    def close_about(e):
+        dialog.open = False
+        page.update()
+
     dialog = ft.AlertDialog(
         modal=True,
         bgcolor=CARD_BG,
-        title=ft.Text("Sobre Neusomic", color=TEXT_PRIMARY, weight=ft.FontWeight.BOLD),
+        title=ft.Text(
+            "Sobre Neusomic",
+            color=TEXT_PRIMARY,
+            weight=ft.FontWeight.BOLD
+        ),
         content=ft.Text(
             "Neusomic es la plataforma de gestión logística para recolección de "
             "neumáticos usados, control de inventario, trituración, pesaje de "
@@ -116,17 +122,19 @@ def about_dialog(page: ft.Page):
             ft.TextButton(
                 "Cerrar",
                 style=ft.ButtonStyle(color=STAT_BLUE),
-                on_click=lambda e: page.close(dialog),
+                on_click=close_about,
             ),
         ],
         actions_alignment=ft.MainAxisAlignment.END,
     )
+
     return dialog
+
 
 
 # ── Top bar ──────────────────────────────────────────────────────────────────
 def topbar(page: ft.Page, active_route: str):
-    dialog = about_dialog(page)
+    #dialog = about_dialog(page)
 
     TITULOS = {
         "/dashboard_admin": "Dashboard",
@@ -204,14 +212,28 @@ def stat_row():
 def dashboard_admin(page: ft.Page, on_navigate=None, on_logout=None):
     active_route = "/dashboard_admin"
 
+    dialog = about_dialog(page)
+
+    def open_about(e):
+        print("CLICK EN INFO")
+
+        page.overlay.append(dialog)
+        dialog.open = True
+        page.update()
+
+
     info_button = ft.Container(
-        content=ft.Icon(ft.Icons.INFO_OUTLINE, color="#ffffff", size=18),
+        content=ft.Icon(
+            ft.Icons.INFO_OUTLINE,
+            color="#ffffff",
+            size=18
+        ),
         padding=8,
         border_radius=18,
-        border = ft.Border.all(1, "#ffffff"),
+        border=ft.Border.all(1, "#ffffff"),
         ink=True,
         tooltip="Saber más sobre nosotros",
-        #on_click=lambda e: page.open(about_dialog(page)),
+        on_click=open_about,
     )
 
     content_area = ft.Stack(

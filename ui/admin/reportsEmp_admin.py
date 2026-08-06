@@ -47,6 +47,7 @@ def badge_rol(rol: str):
     )
 
 
+
 # ── Acción del lado derecho de la tarjeta ────────────────────────────────────
 def accion_reporte(rep, on_resolver=None):
     if rep.estado == "Pendiente":
@@ -297,7 +298,7 @@ def boton_informacion():
     )
 
 
-# ── Contenido central: bandeja + modal animado (estilo Mac, blur cristalino) ─
+# ── Contenido central: bandeja + modal ─
 def reportes_empleados_content(page: ft.Page):
     reportes = ReportsEmpDAO().get_all_admin()
 
@@ -457,7 +458,7 @@ def reportes_empleados_content(page: ft.Page):
 
 
 # ── Vista completa (conectada a sidebar/topbar) ─────────────────────────────
-def reportes_empleados_admin(page: ft.Page, on_navigate=None):
+def reportes_empleados_admin(page: ft.Page, on_navigate=None, on_logout=None):
     active_route = "/reportes"
 
     return ft.View(
@@ -470,7 +471,7 @@ def reportes_empleados_admin(page: ft.Page, on_navigate=None):
                     topbar(page, active_route),
                     ft.Row(
                         controls=[
-                            sidebar(active_route=active_route, on_navigate=on_navigate),
+                            sidebar(active_route=active_route, on_navigate=on_navigate, on_logout=on_logout),
                             ft.Container(
                                 content=reportes_empleados_content(page),
                                 expand=True,

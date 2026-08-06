@@ -463,7 +463,7 @@ def solicitudes_servicio_content(page):
 
 
 # ── Vista completa (conectada a sidebar/topbar) ─────────────────────────────
-def solicitud_apoyo(page: ft.Page, on_navigate=None):
+def solicitud_apoyo(page: ft.Page, on_navigate=None, on_logout=None):
     active_route = "/apollo"
 
     return ft.View(
@@ -476,7 +476,7 @@ def solicitud_apoyo(page: ft.Page, on_navigate=None):
                     topbar(page, active_route),
                     ft.Row(
                         controls=[
-                            sidebar(active_route=active_route, on_navigate=on_navigate),
+                            sidebar(active_route=active_route, on_navigate=on_navigate, on_logout=on_logout),
                             ft.Container(
                                 content=solicitudes_servicio_content(page),
                                 expand=True,

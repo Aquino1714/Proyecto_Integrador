@@ -11,7 +11,7 @@ from ui.admin.components import (
 
 
 # ── Sidebar ──────────────────────────────────────────────────────────────────
-def sidebar(active_route: str = "/dashboard_almacen", on_navigate=None):
+def sidebar(active_route: str = "/dashboard_almacen", on_navigate=None, on_logout=None):
     items = [
         ("/dashboard_almacen", "Panel principal", ft.Icons.COMPUTER_OUTLINED, True),
         ("/inventario", "Inventario", ft.Icons.FACTORY_OUTLINED, False),
@@ -56,6 +56,10 @@ def sidebar(active_route: str = "/dashboard_almacen", on_navigate=None):
             ),
         )
 
+    async def logout_click(e):
+        if on_logout:
+            await on_logout(e)
+
     return ft.Container(
         width=220,  # más ancho, acorde al mockup
         bgcolor=SIDEBAR_BG,
@@ -79,6 +83,8 @@ def sidebar(active_route: str = "/dashboard_almacen", on_navigate=None):
                     padding=ft.Padding.symmetric(horizontal=12, vertical=9),
                     border=ft.Border.all(1, "#f87171"),
                     border_radius=8,
+                    ink=True,
+                    on_click=logout_click,
                 ),
             ],
             spacing=4,
@@ -185,7 +191,7 @@ def stat_row():
 
 
 # ── Main dashboard view ──────────────────────────────────────────────────────
-def dashboard_almacen(page: ft.Page, on_navigate=None):
+def dashboard_almacen(page: ft.Page, on_navigate=None, on_logout=None):
     active_route = "/dashboard_almacen"
 
     info_button = ft.Container(
@@ -252,7 +258,7 @@ def dashboard_almacen(page: ft.Page, on_navigate=None):
                     topbar(page, active_route),
                     ft.Row(
                         controls=[
-                            sidebar(active_route=active_route, on_navigate=on_navigate),
+                            sidebar(active_route=active_route, on_navigate=on_navigate, on_logout=on_logout),
                             content_area,
                         ],
                         spacing=0,

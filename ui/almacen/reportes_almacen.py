@@ -377,7 +377,7 @@ def dialogo_eliminar_reporte(rep: ReportsEmp, on_confirmar=None, on_cancelar=Non
     )
 
 
-# ── Contenido central: tabla + barra de herramientas + modal animado ────────
+# ── Contenido central: tabla + barra de herramientas + modal────────
 def reportes_trituracion_content(page, empleado_id):
 
     dao = ReportsEmpDAO()
@@ -533,7 +533,7 @@ def reportes_trituracion_content(page, empleado_id):
 
 
 # ── Vista completa (conectada a sidebar/topbar) ─────────────────────────────
-def reportes_almacen(page: ft.Page, empleado_id, on_navigate=None):
+def reportes_almacen(page: ft.Page, empleado_id, on_navigate=None, on_logout=None):
 
     active_route = "/reportes_almacen"
 
@@ -551,7 +551,7 @@ def reportes_almacen(page: ft.Page, empleado_id, on_navigate=None):
                         spacing=0,
                         expand=True,
                         controls=[
-                            sidebar(active_route=active_route, on_navigate=on_navigate),
+                            sidebar(active_route=active_route, on_navigate=on_navigate, on_logout=on_logout),
                             ft.Container(
                                 content=reportes_trituracion_content(page, empleado_id),
                                 expand=True,

@@ -732,7 +732,7 @@ def desechos_content(page: ft.Page, vulcanizadora_id):
 
 
 # ── Vista completa (conectada a sidebar/topbar) ─────────────────────────────
-def reportes_vulcanizadora(page: ft.Page, vulcanizadora_id, on_navigate=None):
+def reportes_vulcanizadora(page: ft.Page, vulcanizadora_id, on_navigate=None, on_logout=None):
     active_route = "/solicitudes"
 
     return ft.View(
@@ -745,7 +745,7 @@ def reportes_vulcanizadora(page: ft.Page, vulcanizadora_id, on_navigate=None):
                     topbar(page, active_route),
                     ft.Row(
                         controls=[
-                            sidebar(active_route=active_route, on_navigate=on_navigate),
+                            sidebar(active_route=active_route, on_navigate=on_navigate, on_logout=on_logout),
                             ft.Container(
                                 content=desechos_content(page, vulcanizadora_id),
                                 expand=True,

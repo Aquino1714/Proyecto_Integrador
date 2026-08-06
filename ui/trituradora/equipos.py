@@ -923,7 +923,7 @@ def equipos_content(page: ft.Page):
     )
 
 
-def equipos_triturador(page: ft.Page, on_navigate=None):
+def equipos_triturador(page: ft.Page, on_navigate=None, on_logout=None):
     return ft.View(
         route=ACTIVE_ROUTE,
         padding=0,
@@ -934,7 +934,7 @@ def equipos_triturador(page: ft.Page, on_navigate=None):
                     topbar(page, ACTIVE_ROUTE),
                     ft.Row(
                         controls=[
-                            sidebar(active_route=ACTIVE_ROUTE, on_navigate=on_navigate),
+                            sidebar(active_route=ACTIVE_ROUTE, on_navigate=on_navigate, on_logout=on_logout),
                             ft.Container(content=equipos_content(page), expand=True),
                         ],
                         spacing=0,

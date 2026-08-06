@@ -346,8 +346,8 @@ def _encabezado_tabla():
 
 
 # ── Vista principal ──────────────────────────────────────────────────────────
-def monitor_transporte(page: ft.Page, on_navigate=None):
-    active_route = "/neumaticos"  # ruta usada por el sidebar para "Monitor transporte"
+def monitor_transporte(page: ft.Page, on_navigate=None, on_logout=None):
+    active_route = "/neumaticos"
 
     FILAS_POR_PAGINA = 5
     estado_vista = {"choferes": [], "busqueda": "", "filtro": None, "pagina": 1}
@@ -382,8 +382,7 @@ def monitor_transporte(page: ft.Page, on_navigate=None):
             filas = [
                 ft.Container(
                     padding=20,
-                    content=ft.Text("No hay choferes que coincidan con la búsqueda/filtro.",
-                                     size=12, color=TEXT_SECONDARY),
+                    content=ft.Text("No hay choferes que coincidan con la búsqueda/filtro.", size=12, color=TEXT_SECONDARY),
                 )
             ]
 
@@ -394,7 +393,7 @@ def monitor_transporte(page: ft.Page, on_navigate=None):
         if tabla_container.current.page:
             tabla_container.current.update()
 
-        # Paginación
+        # ────Paginación─────────────────────────────────────────────
         def ir_a_pagina(n):
             estado_vista["pagina"] = n
             redibujar()
@@ -511,7 +510,7 @@ def monitor_transporte(page: ft.Page, on_navigate=None):
                     topbar(page, active_route),
                     ft.Row(
                         controls=[
-                            sidebar(active_route=active_route, on_navigate=on_navigate),
+                            sidebar(active_route=active_route, on_navigate=on_navigate, on_logout=on_logout),
                             content_area,
                         ],
                         spacing=0,
