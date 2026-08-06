@@ -2,6 +2,7 @@ import asyncio
 from datetime import date
 
 import flet as ft
+import re
 from datetime import datetime
 
 from ui.colors import *
@@ -38,6 +39,16 @@ ROL_COLORES = {
     "Triturador": "#ffaa00",
     "Distribucion": "#ffaa00",
 }
+
+def validar_email(email):
+    patron = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+    return re.fullmatch(patron, email) is not None
+
+def validar_password(password):
+    patron = r"^(?=.*[A-Z])(?=.*\d).{8,}$"
+    return re.fullmatch(patron, password) is not None
+
+
 
 
 def badge_rol(rol: str):
@@ -321,7 +332,7 @@ def campo_editable(label: str, value: str):
     )
 
 
-def formulario_editar_empleado(page: ft.Page, emp, on_guardar=None, on_cancelar=None):
+def formulario_editar_empleado(page: ft.Page, emp, on_guardar=None, on_cancelar=None, on_error=None):
     nombre_field = campo_editable("Nombre", emp.name)
     apaterno_field = campo_editable("Apellido paterno", emp.aPaterno)
     amaterno_field = campo_editable("Apellido materno", emp.aMaterno)
@@ -370,6 +381,17 @@ def formulario_editar_empleado(page: ft.Page, emp, on_guardar=None, on_cancelar=
     )
 
     def _guardar(e):
+        # Validación de correo antes de guardar cambios.
+        if not validar_email(correo_field.value):
+            correo_field.error_text = "Correo electrónico inválido"
+            correo_field.update()
+            if on_error:
+                on_error("Revisa el correo electrónico, tiene un formato inválido.")
+            return
+        else:
+            correo_field.error_text = None
+            correo_field.update()
+
         datos_editados = {
             "empleado_id": emp.empleado_id,
             "name": nombre_field.value,
@@ -495,11 +517,23 @@ def campo_fecha(page: ft.Page, label: str, valor_inicial: str = ""):
     )
 
     def fecha_seleccionada(e):
-        if e.control.value:
-            fecha_field.value = e.control.value.strftime("%Y-%m-%d")
+        if picker.value:
+            fecha_field.value = picker.value.strftime("%Y-%m-%d")
             fecha_field.update()
 
     picker.on_change = fecha_seleccionada
+
+    # Registrar el picker en la página.
+    # ⚠️ Cada vez que se abre un modal con campo_fecha se crea un DatePicker
+    # nuevo y se agrega a page.overlay. Si nunca se limpia, se acumulan
+    # DatePickers "fantasma" en el overlay con cada apertura/cierre del modal.
+    # La limpieza correspondiente se hace en empleados_content._cerrar(),
+    # que remueve todos los DatePicker de page.overlay al cerrar el modal.
+    page.overlay.append(picker)
+
+    def abrir_fecha(e):
+        picker.open = True
+        page.update()
 
     layout = ft.Column(
         expand=True,
@@ -511,7 +545,7 @@ def campo_fecha(page: ft.Page, label: str, valor_inicial: str = ""):
                     fecha_field,
                     ft.IconButton(
                         icon=ft.Icons.CALENDAR_MONTH,
-                        on_click=lambda e: page.show_dialog(picker),
+                        on_click=abrir_fecha,
                     ),
                 ]
             ),
@@ -519,6 +553,7 @@ def campo_fecha(page: ft.Page, label: str, valor_inicial: str = ""):
     )
 
     return fecha_field, layout
+
 
 
 
@@ -531,7 +566,7 @@ def formulario_nuevo_empleado(page: ft.Page, on_guardar=None, on_cancelar=None, 
         page,
         "Fecha de nacimiento"
     )
-    telefono_field, telefono_box = campo_nuevo("Teléfono:", "10 dígitos")
+    telefono_field, telefono_box = campo_nuevo("Teléfono:", "222 468 1234")
     password_field, password_box = campo_nuevo("Contraseña:", "Contraseña", password=True)
 
     rol_dropdown = ft.Dropdown(
@@ -554,8 +589,6 @@ def formulario_nuevo_empleado(page: ft.Page, on_guardar=None, on_cancelar=None, 
         options=[ft.dropdown.Option(t) for t in TURNOS],
     )
 
-    error_text = ft.Text("", size=12, color=STAT_ORANGE, visible=False)
-
     def _guardar(e):
         campos_obligatorios = [
             nombre_field.value,
@@ -565,12 +598,29 @@ def formulario_nuevo_empleado(page: ft.Page, on_guardar=None, on_cancelar=None, 
             rol_dropdown.value,
         ]
         if not all(campos_obligatorios):
-
             if on_error:
-                on_error(
-                    "Completa todos los campos obligatorios."
-                )
+                on_error("Completa nombres, apellido paterno, correo, contraseña y rol.")
             return
+
+        if not validar_email(correo_field.value):
+            correo_field.error_text = "Correo electrónico inválido"
+            correo_field.update()
+            if on_error:
+                on_error("Revisa el correo electrónico, tiene un formato inválido.")
+            return
+        else:
+            correo_field.error_text = None
+            correo_field.update()
+
+        if not validar_password(password_field.value):
+            password_field.error_text = "Mínimo 8 caracteres, con mayúscula y número"
+            password_field.update()
+            if on_error:
+                on_error("La contraseña debe tener mínimo 8 caracteres, una mayúscula y un número.")
+            return
+        else:
+            password_field.error_text = None
+            password_field.update()
 
         datos_nuevos = {
             "name": nombre_field.value,
@@ -618,7 +668,6 @@ def formulario_nuevo_empleado(page: ft.Page, on_guardar=None, on_cancelar=None, 
                 ft.Row(controls=[fecha_nac_box, telefono_box], spacing=14),
                 password_box,
                 ft.Row(controls=[rol_dropdown, turno_dropdown], spacing=14),
-                error_text,
                 ft.Container(height=6),
                 ft.Row(
                     controls=[
@@ -743,6 +792,9 @@ def empleados_content(page: ft.Page, on_nuevo_empleado=None, on_ver_detalle=None
     busqueda_actual = ""
     rol_actual = None
 
+    def _toast(mensaje, tipo="normal"):
+        page.run_task(notifications.show, mensaje, tipo)
+
     def actualizar_tabla():
         lista = EmpleadoDAO().get_all()
 
@@ -811,13 +863,25 @@ def empleados_content(page: ft.Page, on_nuevo_empleado=None, on_ver_detalle=None
         modal_overlay_ref.current.visible = False
         modal_overlay_ref.current.update()
 
+        # Limpieza de los DatePicker acumulados por campo_fecha() mientras
+        # el modal estuvo abierto (ver nota en campo_fecha). Se remueven
+        # todos para que no se acumulen en page.overlay entre aperturas.
+        page.overlay[:] = [c for c in page.overlay if not isinstance(c, ft.DatePicker)]
+        page.update()
+
     def cerrar_modal(e=None):
         page.run_task(_cerrar)
 
     def ir_a_editar(emp):
         page.run_task(
             _swap_contenido,
-            formulario_editar_empleado(page, emp, on_guardar=guardar_edicion, on_cancelar=cerrar_modal),
+            formulario_editar_empleado(
+                page,
+                emp,
+                on_guardar=guardar_edicion,
+                on_cancelar=cerrar_modal,
+                on_error=lambda msg: _toast(msg, "warning"),
+            ),
         )
 
     def ir_a_baja(emp):
@@ -838,13 +902,12 @@ def empleados_content(page: ft.Page, on_nuevo_empleado=None, on_ver_detalle=None
         emp_actualizado.id_rol = datos["id_rol"]
         emp_actualizado.active = datos["active"]
 
+        # ⚠️ Pendiente conocido (no se toca en este cambio): EmpleadoDAO.update()
+        # vuelve a hashear password_hash, lo que rompe el login del empleado
+        # editado. Ver notas previas del proyecto.
         EmpleadoDAO().update(emp_actualizado)
 
-        page.run_task(
-            notifications.show,
-            "Empleado actualizado correctamente.",
-            "success"
-        )
+        _toast("Empleado actualizado correctamente.", "success")
 
         _refrescar_lista()
         cerrar_modal()
@@ -852,43 +915,41 @@ def empleados_content(page: ft.Page, on_nuevo_empleado=None, on_ver_detalle=None
     def confirmar_baja(empleado_id, motivo):
         EmpleadoDAO().unsubscribe(empleado_id, motivo, date.today())
 
-        page.run_task(
-            notifications.show,
-            "Empleado dado de baja.",
-            "success"
-        )
+        _toast("Empleado dado de baja.", "success")
 
         _refrescar_lista()
         cerrar_modal()
 
     def guardar_nuevo(datos):
+        try:
+            nuevo = Empleado(
+                empleado_id=None,
+                name=datos["name"],
+                aPaterno=datos["aPaterno"],
+                aMaterno=datos["aMaterno"],
+                email=datos["email"],
+                phone=datos["phone"],
+                password_hash=datos["password"],
+                active=True,
+                fecha_registro=date.today(),
+                fecha_baja=None,
+                motivo_baja=None,
+                id_rol=datos["id_rol"],
+                fecha_nacimiento=datos["fecha_nacimiento"],
+                turno=datos["turno"],
+            )
 
-        nuevo = Empleado(
-            empleado_id=None,
-            name=datos["name"],
-            aPaterno=datos["aPaterno"],
-            aMaterno=datos["aMaterno"],
-            email=datos["email"],
-            phone=datos["phone"],
-            password_hash=datos["password"],
-            active=True,
-            fecha_registro=date.today(),
-            fecha_baja=None,
-            motivo_baja=None,
-            id_rol=datos["id_rol"],
-            fecha_nacimiento=datos["fecha_nacimiento"],
-            turno=datos["turno"],
-        )
-        EmpleadoDAO().insert(nuevo)
+            EmpleadoDAO().insert(nuevo)
 
-        page.run_task(
-            notifications.show,
-            "Empleado registrado correctamente.",
-            "success"
-        )
+            _toast("Empleado agregado correctamente.", "success")
 
-        _refrescar_lista()
-        cerrar_modal()
+            _refrescar_lista()
+            cerrar_modal()
+
+        except Exception as ex:
+            import traceback
+            traceback.print_exc()
+            _toast(f"Error: {ex}", "error")
 
     def abrir_detalle(emp):
         async def _abrir():
@@ -916,7 +977,12 @@ def empleados_content(page: ft.Page, on_nuevo_empleado=None, on_ver_detalle=None
 
     def abrir_nuevo(e=None):
         async def _abrir():
-            formulario = formulario_nuevo_empleado(page, on_guardar=guardar_nuevo, on_cancelar=cerrar_modal)
+            formulario = formulario_nuevo_empleado(
+                page,
+                on_guardar=guardar_nuevo,
+                on_cancelar=cerrar_modal,
+                on_error=lambda msg: _toast(msg, "warning"),
+            )
             modal_card_ref.current.content = formulario
             modal_overlay_ref.current.visible = True
             modal_card_ref.current.scale = 0.85
@@ -964,6 +1030,7 @@ def empleados_content(page: ft.Page, on_nuevo_empleado=None, on_ver_detalle=None
                     on_click=lambda e: None,
                     content=ft.Container(
                         ref=modal_card_ref,
+                        width=600,
                         scale=0.85,
                         opacity=0,
                         animate_scale=ft.Animation(320, ft.AnimationCurve.EASE_OUT_BACK),
@@ -1106,6 +1173,7 @@ def fila_empleado(emp, on_click=None):
                 bottom=ft.BorderSide(1, DIVIDER)
             ),
             ink=True,
+            tooltip="Click para ver más detalles",
             on_click=lambda e: on_click(emp) if on_click else None,
             content=ft.Row(
                 controls=[
