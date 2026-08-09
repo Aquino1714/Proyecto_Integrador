@@ -105,23 +105,711 @@ def about_dialog(page: ft.Page):
     dialog = ft.AlertDialog(
         modal=True,
         bgcolor=CARD_BG,
-        title=ft.Text(
-            "Sobre Neusomic",
-            color=TEXT_PRIMARY,
-            weight=ft.FontWeight.BOLD
+        title=ft.Row(
+            controls=[
+                ft.Container(
+                    width=42,
+                    height=42,
+                    border_radius=10,
+                    bgcolor=ft.Colors.with_opacity(0.12, STAT_BLUE),
+                    alignment=ft.Alignment.CENTER,
+                    content=ft.Icon(
+                        ft.Icons.RECYCLING_OUTLINED,
+                        color=STAT_BLUE,
+                        size=25,
+                    ),
+                ),
+                ft.Column(
+                    controls=[
+                        ft.Text(
+                            "Sobre Neusomic",
+                            color=TEXT_PRIMARY,
+                            size=19,
+                            weight=ft.FontWeight.BOLD,
+                        ),
+                        ft.Text(
+                            "Innovación, reciclaje y construcción sostenible",
+                            color=TEXT_SECONDARY,
+                            size=11,
+                        ),
+                    ],
+                    spacing=2,
+                    tight=True,
+                ),
+            ],
+            spacing=12,
         ),
-        content=ft.Text(
-            "Neusomic es la plataforma de gestión logística para recolección de "
-            "neumáticos usados, control de inventario, trituración, pesaje de "
-            "materia prima (caucho limpio) y distribución de pavimento asfáltico "
-            "modificado a empresas constructoras.",
-            color=TEXT_SECONDARY,
-            size=13,
+
+        content=ft.Container(
+            width=720,
+            height=560,
+            content=ft.Column(
+                scroll=ft.ScrollMode.AUTO,
+                spacing=18,
+                controls=[
+
+                    # ─────────────────────────────────────────────────────
+                    # INTRODUCCIÓN
+                    # ─────────────────────────────────────────────────────
+                    ft.Container(
+                        padding=18,
+                        border_radius=12,
+                        bgcolor=ft.Colors.with_opacity(0.06, STAT_BLUE),
+                        border=ft.Border.all(
+                            1,
+                            ft.Colors.with_opacity(0.20, STAT_BLUE)
+                        ),
+                        content=ft.Column(
+                            spacing=8,
+                            controls=[
+                                ft.Text(
+                                    "¿Quiénes somos?",
+                                    size=15,
+                                    weight=ft.FontWeight.BOLD,
+                                    color=STAT_BLUE,
+                                ),
+                                ft.Text(
+                                    "Neusomic es una empresa mexicana dedicada a la "
+                                    "gestión integral y aprovechamiento de neumáticos "
+                                    "fuera de uso. Nuestro objetivo es transformar "
+                                    "un residuo de difícil manejo en materia prima "
+                                    "útil para nuevos procesos industriales y de "
+                                    "construcción.",
+                                    size=13,
+                                    color=TEXT_PRIMARY,
+                                ),
+                                ft.Text(
+                                    "A través de procesos de recolección, "
+                                    "clasificación, trituración, separación y "
+                                    "distribución, buscamos reducir el impacto "
+                                    "ambiental generado por los neumáticos "
+                                    "desechados y fomentar una economía circular.",
+                                    size=13,
+                                    color=TEXT_SECONDARY,
+                                ),
+                            ],
+                        ),
+                    ),
+
+                    # ─────────────────────────────────────────────────────
+                    # MISIÓN / VISIÓN
+                    # ─────────────────────────────────────────────────────
+                    ft.Row(
+                        controls=[
+                            ft.Container(
+                                expand=True,
+                                padding=16,
+                                border_radius=10,
+                                bgcolor=ft.Colors.with_opacity(
+                                    0.06,
+                                    STAT_ORANGE
+                                ),
+                                content=ft.Column(
+                                    spacing=7,
+                                    controls=[
+                                        ft.Icon(
+                                            ft.Icons.FLAG_OUTLINED,
+                                            color=STAT_ORANGE,
+                                            size=22,
+                                        ),
+                                        ft.Text(
+                                            "Misión",
+                                            size=14,
+                                            weight=ft.FontWeight.BOLD,
+                                            color=STAT_ORANGE,
+                                        ),
+                                        ft.Text(
+                                            "Gestionar responsablemente los "
+                                            "neumáticos fuera de uso mediante "
+                                            "procesos eficientes de recuperación "
+                                            "y transformación, generando valor "
+                                            "ambiental, social y económico.",
+                                            size=12,
+                                            color=TEXT_SECONDARY,
+                                        ),
+                                    ],
+                                ),
+                            ),
+
+                            ft.Container(
+                                expand=True,
+                                padding=16,
+                                border_radius=10,
+                                bgcolor=ft.Colors.with_opacity(
+                                    0.06,
+                                    STAT_BLUE
+                                ),
+                                content=ft.Column(
+                                    spacing=7,
+                                    controls=[
+                                        ft.Icon(
+                                            ft.Icons.VISIBILITY_OUTLINED,
+                                            color=STAT_BLUE,
+                                            size=22,
+                                        ),
+                                        ft.Text(
+                                            "Visión",
+                                            size=14,
+                                            weight=ft.FontWeight.BOLD,
+                                            color=STAT_BLUE,
+                                        ),
+                                        ft.Text(
+                                            "Ser una empresa referente en "
+                                            "México en el aprovechamiento de "
+                                            "neumáticos reciclados y contribuir "
+                                            "a una industria de construcción "
+                                            "más sostenible.",
+                                            size=12,
+                                            color=TEXT_SECONDARY,
+                                        ),
+                                    ],
+                                ),
+                            ),
+                        ],
+                        spacing=12,
+                    ),
+
+                    # ─────────────────────────────────────────────────────
+                    # SERVICIOS
+                    # ─────────────────────────────────────────────────────
+                    ft.Row(
+                        controls=[
+                            ft.Icon(
+                                ft.Icons.SETTINGS_OUTLINED,
+                                color=STAT_BLUE,
+                                size=22,
+                            ),
+                            ft.Text(
+                                "¿Qué hacemos?",
+                                size=15,
+                                weight=ft.FontWeight.BOLD,
+                                color=TEXT_PRIMARY,
+                            ),
+                        ],
+                        spacing=8,
+                    ),
+
+                    ft.Column(
+                        spacing=8,
+                        controls=[
+                            ft.Row(
+                                controls=[
+                                    ft.Icon(
+                                        ft.Icons.LOCAL_SHIPPING_OUTLINED,
+                                        color=STAT_ORANGE,
+                                        size=20,
+                                    ),
+                                    ft.Column(
+                                        controls=[
+                                            ft.Text(
+                                                "Recolección",
+                                                size=13,
+                                                weight=ft.FontWeight.BOLD,
+                                                color=TEXT_PRIMARY,
+                                            ),
+                                            ft.Text(
+                                                "Recepción y traslado de neumáticos "
+                                                "fuera de uso desde centros de "
+                                                "acopio y empresas generadoras.",
+                                                size=11,
+                                                color=TEXT_SECONDARY,
+                                            ),
+                                        ],
+                                        spacing=2,
+                                        expand=True,
+                                    ),
+                                ],
+                                spacing=10,
+                            ),
+
+                            ft.Row(
+                                controls=[
+                                    ft.Icon(
+                                        ft.Icons.DELETE_SWEEP_OUTLINED,
+                                        color=STAT_ORANGE,
+                                        size=20,
+                                    ),
+                                    ft.Column(
+                                        controls=[
+                                            ft.Text(
+                                                "Clasificación",
+                                                size=13,
+                                                weight=ft.FontWeight.BOLD,
+                                                color=TEXT_PRIMARY,
+                                            ),
+                                            ft.Text(
+                                                "Separación y clasificación de "
+                                                "materiales según sus características "
+                                                "y condiciones.",
+                                                size=11,
+                                                color=TEXT_SECONDARY,
+                                            ),
+                                        ],
+                                        spacing=2,
+                                        expand=True,
+                                    ),
+                                ],
+                                spacing=10,
+                            ),
+
+                            ft.Row(
+                                controls=[
+                                    ft.Icon(
+                                        ft.Icons.BUILD_OUTLINED,
+                                        color=STAT_ORANGE,
+                                        size=20,
+                                    ),
+                                    ft.Column(
+                                        controls=[
+                                            ft.Text(
+                                                "Trituración",
+                                                size=13,
+                                                weight=ft.FontWeight.BOLD,
+                                                color=TEXT_PRIMARY,
+                                            ),
+                                            ft.Text(
+                                                "Procesamiento mecánico de los "
+                                                "neumáticos para obtener caucho "
+                                                "reciclado y otros materiales.",
+                                                size=11,
+                                                color=TEXT_SECONDARY,
+                                            ),
+                                        ],
+                                        spacing=2,
+                                        expand=True,
+                                    ),
+                                ],
+                                spacing=10,
+                            ),
+
+                            ft.Row(
+                                controls=[
+                                    ft.Icon(
+                                        ft.Icons.CONSTRUCTION_OUTLINED,
+                                        color=STAT_ORANGE,
+                                        size=20,
+                                    ),
+                                    ft.Column(
+                                        controls=[
+                                            ft.Text(
+                                                "Distribución",
+                                                size=13,
+                                                weight=ft.FontWeight.BOLD,
+                                                color=TEXT_PRIMARY,
+                                            ),
+                                            ft.Text(
+                                                "Suministro de materiales reciclados "
+                                                "a empresas constructoras y proyectos "
+                                                "de infraestructura.",
+                                                size=11,
+                                                color=TEXT_SECONDARY,
+                                            ),
+                                        ],
+                                        spacing=2,
+                                        expand=True,
+                                    ),
+                                ],
+                                spacing=10,
+                            ),
+                        ],
+                    ),
+
+                    # ─────────────────────────────────────────────────────
+                    # PROCESO
+                    # ─────────────────────────────────────────────────────
+                    ft.Container(
+                        padding=16,
+                        border_radius=10,
+                        bgcolor=ft.Colors.with_opacity(
+                            0.04,
+                            TEXT_PRIMARY
+                        ),
+                        content=ft.Column(
+                            spacing=10,
+                            controls=[
+                                ft.Text(
+                                    "Nuestro proceso",
+                                    size=14,
+                                    weight=ft.FontWeight.BOLD,
+                                    color=TEXT_PRIMARY,
+                                ),
+
+                                ft.Row(
+                                    controls=[
+                                        ft.Column(
+                                            controls=[
+                                                ft.Icon(
+                                                    ft.Icons.LOCAL_SHIPPING,
+                                                    color=STAT_BLUE,
+                                                    size=24,
+                                                ),
+                                                ft.Text(
+                                                    "1. Recolección",
+                                                    size=10,
+                                                    color=TEXT_SECONDARY,
+                                                ),
+                                            ],
+                                            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                                            spacing=4,
+                                        ),
+
+                                        ft.Icon(
+                                            ft.Icons.ARROW_FORWARD,
+                                            color=DIVIDER,
+                                            size=18,
+                                        ),
+
+                                        ft.Column(
+                                            controls=[
+                                                ft.Icon(
+                                                    ft.Icons.INVENTORY_2_OUTLINED,
+                                                    color=STAT_BLUE,
+                                                    size=24,
+                                                ),
+                                                ft.Text(
+                                                    "2. Recepción",
+                                                    size=10,
+                                                    color=TEXT_SECONDARY,
+                                                ),
+                                            ],
+                                            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                                            spacing=4,
+                                        ),
+
+                                        ft.Icon(
+                                            ft.Icons.ARROW_FORWARD,
+                                            color=DIVIDER,
+                                            size=18,
+                                        ),
+
+                                        ft.Column(
+                                            controls=[
+                                                ft.Icon(
+                                                    ft.Icons.CONTENT_CUT,
+                                                    color=STAT_ORANGE,
+                                                    size=24,
+                                                ),
+                                                ft.Text(
+                                                    "3. Trituración",
+                                                    size=10,
+                                                    color=TEXT_SECONDARY,
+                                                ),
+                                            ],
+                                            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                                            spacing=4,
+                                        ),
+
+                                        ft.Icon(
+                                            ft.Icons.ARROW_FORWARD,
+                                            color=DIVIDER,
+                                            size=18,
+                                        ),
+
+                                        ft.Column(
+                                            controls=[
+                                                ft.Icon(
+                                                    ft.Icons.SCALE_OUTLINED,
+                                                    color=STAT_ORANGE,
+                                                    size=24,
+                                                ),
+                                                ft.Text(
+                                                    "4. Pesaje",
+                                                    size=10,
+                                                    color=TEXT_SECONDARY,
+                                                ),
+                                            ],
+                                            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                                            spacing=4,
+                                        ),
+
+                                        ft.Icon(
+                                            ft.Icons.ARROW_FORWARD,
+                                            color=DIVIDER,
+                                            size=18,
+                                        ),
+
+                                        ft.Column(
+                                            controls=[
+                                                ft.Icon(
+                                                    ft.Icons.LOCAL_SHIPPING_OUTLINED,
+                                                    color=STAT_BLUE,
+                                                    size=24,
+                                                ),
+                                                ft.Text(
+                                                    "5. Distribución",
+                                                    size=10,
+                                                    color=TEXT_SECONDARY,
+                                                ),
+                                            ],
+                                            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                                            spacing=4,
+                                        ),
+                                    ],
+                                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                                ),
+                            ],
+                        ),
+                    ),
+
+                    # ─────────────────────────────────────────────────────
+                    # VALORES
+                    # ─────────────────────────────────────────────────────
+                    ft.Row(
+                        controls=[
+                            ft.Icon(
+                                ft.Icons.STARS_OUTLINED,
+                                color=STAT_ORANGE,
+                                size=22,
+                            ),
+                            ft.Text(
+                                "Nuestros valores",
+                                size=15,
+                                weight=ft.FontWeight.BOLD,
+                                color=TEXT_PRIMARY,
+                            ),
+                        ],
+                        spacing=8,
+                    ),
+
+                    ft.Row(
+                        controls=[
+                            ft.Container(
+                                expand=True,
+                                padding=12,
+                                border_radius=8,
+                                bgcolor=ft.Colors.with_opacity(
+                                    0.05,
+                                    STAT_BLUE
+                                ),
+                                content=ft.Column(
+                                    controls=[
+                                        ft.Icon(
+                                            ft.Icons.ECO_OUTLINED,
+                                            color=STAT_BLUE,
+                                            size=22,
+                                        ),
+                                        ft.Text(
+                                            "Responsabilidad ambiental",
+                                            size=11,
+                                            weight=ft.FontWeight.BOLD,
+                                            color=TEXT_PRIMARY,
+                                        ),
+                                    ],
+                                    spacing=5,
+                                ),
+                            ),
+
+                            ft.Container(
+                                expand=True,
+                                padding=12,
+                                border_radius=8,
+                                bgcolor=ft.Colors.with_opacity(
+                                    0.05,
+                                    STAT_ORANGE
+                                ),
+                                content=ft.Column(
+                                    controls=[
+                                        ft.Icon(
+                                            ft.Icons.LIGHTBULB_OUTLINE,
+                                            color=STAT_ORANGE,
+                                            size=22,
+                                        ),
+                                        ft.Text(
+                                            "Innovación",
+                                            size=11,
+                                            weight=ft.FontWeight.BOLD,
+                                            color=TEXT_PRIMARY,
+                                        ),
+                                    ],
+                                    spacing=5,
+                                ),
+                            ),
+
+                            ft.Container(
+                                expand=True,
+                                padding=12,
+                                border_radius=8,
+                                bgcolor=ft.Colors.with_opacity(
+                                    0.05,
+                                    STAT_BLUE
+                                ),
+                                content=ft.Column(
+                                    controls=[
+                                        ft.Icon(
+                                            ft.Icons.GROUP_OUTLINED,
+                                            color=STAT_BLUE,
+                                            size=22,
+                                        ),
+                                        ft.Text(
+                                            "Trabajo en equipo",
+                                            size=11,
+                                            weight=ft.FontWeight.BOLD,
+                                            color=TEXT_PRIMARY,
+                                        ),
+                                    ],
+                                    spacing=5,
+                                ),
+                            ),
+
+                            ft.Container(
+                                expand=True,
+                                padding=12,
+                                border_radius=8,
+                                bgcolor=ft.Colors.with_opacity(
+                                    0.05,
+                                    STAT_ORANGE
+                                ),
+                                content=ft.Column(
+                                    controls=[
+                                        ft.Icon(
+                                            ft.Icons.VERIFIED_OUTLINED,
+                                            color=STAT_ORANGE,
+                                            size=22,
+                                        ),
+                                        ft.Text(
+                                            "Calidad",
+                                            size=11,
+                                            weight=ft.FontWeight.BOLD,
+                                            color=TEXT_PRIMARY,
+                                        ),
+                                    ],
+                                    spacing=5,
+                                ),
+                            ),
+                        ],
+                        spacing=10,
+                    ),
+
+                    # ─────────────────────────────────────────────────────
+                    # DATOS GENERALES
+                    # ─────────────────────────────────────────────────────
+                    ft.Container(
+                        padding=16,
+                        border_radius=10,
+                        border=ft.Border.all(1, DIVIDER),
+                        content=ft.Column(
+                            spacing=8,
+                            controls=[
+                                ft.Text(
+                                    "Datos generales",
+                                    size=14,
+                                    weight=ft.FontWeight.BOLD,
+                                    color=TEXT_PRIMARY,
+                                ),
+
+                                ft.Row(
+                                    controls=[
+                                        ft.Icon(
+                                            ft.Icons.CALENDAR_TODAY_OUTLINED,
+                                            size=17,
+                                            color=TEXT_SECONDARY,
+                                        ),
+                                        ft.Text(
+                                            "Inicio de operaciones: 2018",
+                                            size=12,
+                                            color=TEXT_SECONDARY,
+                                        ),
+                                    ],
+                                    spacing=8,
+                                ),
+
+                                ft.Row(
+                                    controls=[
+                                        ft.Icon(
+                                            ft.Icons.LOCATION_ON_OUTLINED,
+                                            size=17,
+                                            color=TEXT_SECONDARY,
+                                        ),
+                                        ft.Text(
+                                            "Zona de operaciones: Región Centro de México",
+                                            size=12,
+                                            color=TEXT_SECONDARY,
+                                        ),
+                                    ],
+                                    spacing=8,
+                                ),
+
+                                ft.Row(
+                                    controls=[
+                                        ft.Icon(
+                                            ft.Icons.RECYCLING_OUTLINED,
+                                            size=17,
+                                            color=TEXT_SECONDARY,
+                                        ),
+                                        ft.Text(
+                                            "Especialidad: Reciclaje y aprovechamiento de neumáticos",
+                                            size=12,
+                                            color=TEXT_SECONDARY,
+                                        ),
+                                    ],
+                                    spacing=8,
+                                ),
+
+                                ft.Row(
+                                    controls=[
+                                        ft.Icon(
+                                            ft.Icons.BUSINESS_OUTLINED,
+                                            size=17,
+                                            color=TEXT_SECONDARY,
+                                        ),
+                                        ft.Text(
+                                            "Clientes principales: Constructoras e industrias",
+                                            size=12,
+                                            color=TEXT_SECONDARY,
+                                        ),
+                                    ],
+                                    spacing=8,
+                                ),
+                            ],
+                        ),
+                    ),
+
+                    # ─────────────────────────────────────────────────────
+                    # FRASE FINAL
+                    # ─────────────────────────────────────────────────────
+                    ft.Container(
+                        padding=18,
+                        border_radius=10,
+                        bgcolor=ft.Colors.with_opacity(
+                            0.08,
+                            STAT_ORANGE
+                        ),
+                        content=ft.Column(
+                            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                            spacing=6,
+                            controls=[
+                                ft.Icon(
+                                    ft.Icons.ECO,
+                                    color=STAT_ORANGE,
+                                    size=26,
+                                ),
+                                ft.Text(
+                                    "“Transformamos residuos en oportunidades.”",
+                                    size=14,
+                                    italic=True,
+                                    weight=ft.FontWeight.BOLD,
+                                    color=TEXT_PRIMARY,
+                                    text_align=ft.TextAlign.CENTER,
+                                ),
+                                ft.Text(
+                                    "Neusomic · Gestión responsable de materiales",
+                                    size=11,
+                                    color=TEXT_SECONDARY,
+                                    text_align=ft.TextAlign.CENTER,
+                                ),
+                            ],
+                        ),
+                    ),
+                ],
+            ),
         ),
+
         actions=[
             ft.TextButton(
                 "Cerrar",
-                style=ft.ButtonStyle(color=STAT_BLUE),
+                style=ft.ButtonStyle(
+                    color=STAT_BLUE,
+                ),
                 on_click=close_about,
             ),
         ],

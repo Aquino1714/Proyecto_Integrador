@@ -1,9 +1,8 @@
 import asyncio
-from datetime import date
 
 import flet as ft
 import re
-from datetime import datetime
+from datetime import date, datetime
 
 from ui.colors import *
 from dao.empleado_dao import EmpleadoDAO
@@ -46,7 +45,7 @@ def validar_email(email):
 
 def validar_password(password):
     patron = r"^(?=.*[A-Z])(?=.*\d).{8,}$"
-    return re.fullmatch(patron, password) is not None
+    return re.fullmatch(patron, password or "") is not None
 
 
 
@@ -93,12 +92,12 @@ def boton_nuevo_empleado(on_nuevo_empleado=None):
 
 def filtro_row(on_aplicar_filtro=None):
     dropdown = ft.Dropdown(
-        hint_text="Filtrar",
+        hint_text="Filtrar por rol",
         width=180,
         border_radius=8,
         border_color=DIVIDER,
         text_size=13,
-        options=[ft.dropdown.Option(r) for r in ROLES_FILTRO],
+        options=[ft.dropdown.Option("Todos"), * [ft.dropdown.Option(r) for r in ROLES_FILTRO], ],
     )
     aplicar_btn = ft.ElevatedButton(
         "Aplicar",
@@ -151,35 +150,90 @@ def tabla_empleados(empleados, on_ver_detalle=None):
 
 
 def paginacion(pagina_actual: int, total_paginas: int, on_cambiar_pagina=None):
-    controles = [
-        ft.IconButton(
-            ft.Icons.CHEVRON_LEFT,
-            icon_color=STAT_BLUE,
-            on_click=(lambda e: on_cambiar_pagina(max(1, pagina_actual - 1))) if on_cambiar_pagina else None,
+    if total_paginas <= 0:
+        return ft.Row(
+            controls=[],
+            alignment=ft.MainAxisAlignment.CENTER,
         )
-    ]
-    for n in range(1, total_paginas + 1):
-        activo = n == pagina_actual
-        controles.append(
-            ft.Container(
-                content=ft.Text(
-                    str(n), size=13,
-                    color=STAT_ORANGE if activo else TEXT_SECONDARY,
-                    weight=ft.FontWeight.BOLD if activo else ft.FontWeight.NORMAL,
-                ),
-                padding=ft.Padding.symmetric(horizontal=6),
-                on_click=(lambda e, n=n: on_cambiar_pagina(n)) if on_cambiar_pagina else None,
-            )
-        )
+
+    controles = []
+
     controles.append(
         ft.IconButton(
-            ft.Icons.CHEVRON_RIGHT,
-            icon_color=STAT_BLUE,
-            on_click=(lambda e: on_cambiar_pagina(min(total_paginas, pagina_actual + 1))) if on_cambiar_pagina else None,
+            icon=ft.Icons.CHEVRON_LEFT,
+            icon_color=(
+                STAT_BLUE
+                if pagina_actual > 1
+                else TEXT_SECONDARY
+            ),
+            disabled=pagina_actual <= 1,
+            on_click=(
+                lambda e: on_cambiar_pagina(pagina_actual - 1)
+                if on_cambiar_pagina and pagina_actual > 1
+                else None
+            ),
         )
     )
-    return ft.Row(controles, alignment=ft.MainAxisAlignment.CENTER, spacing=2) if False else ft.Row(controls=controles, alignment=ft.MainAxisAlignment.CENTER, spacing=2)
 
+    for n in range(1, total_paginas + 1):
+        activo = n == pagina_actual
+
+        controles.append(
+            ft.Container(
+                width=32,
+                height=32,
+                alignment=ft.Alignment.CENTER,
+                border_radius=6,
+                bgcolor=(
+                    ft.Colors.with_opacity(0.12, STAT_BLUE)
+                    if activo
+                    else None
+                ),
+                content=ft.Text(
+                    str(n),
+                    size=13,
+                    color=(
+                        STAT_ORANGE
+                        if activo
+                        else TEXT_SECONDARY
+                    ),
+                    weight=(
+                        ft.FontWeight.BOLD
+                        if activo
+                        else ft.FontWeight.NORMAL
+                    ),
+                ),
+                on_click=(
+                    lambda e, pagina=n:
+                    on_cambiar_pagina(pagina)
+                    if on_cambiar_pagina
+                    else None
+                ),
+            )
+        )
+
+    controles.append(
+        ft.IconButton(
+            icon=ft.Icons.CHEVRON_RIGHT,
+            icon_color=(
+                STAT_BLUE
+                if pagina_actual < total_paginas
+                else TEXT_SECONDARY
+            ),
+            disabled=pagina_actual >= total_paginas,
+            on_click=(
+                lambda e: on_cambiar_pagina(pagina_actual + 1)
+                if on_cambiar_pagina and pagina_actual < total_paginas
+                else None
+            ),
+        )
+    )
+
+    return ft.Row(
+        controls=controles,
+        alignment=ft.MainAxisAlignment.CENTER,
+        spacing=2,
+    )
 
 def boton_informacion():
     return ft.Container(
@@ -311,7 +365,7 @@ def detalle_empleado_card(emp, on_cerrar=None, on_editar=None, on_dar_baja=None)
 
 
 # ── Formulario de edición (modal) ───────────────────────────────────────────
-def campo_editable(label: str, value: str):
+def campo_editable(label: str, value: str, tooltip: str = None,):
     return ft.TextField(
         label=label,
         value=value,
@@ -321,6 +375,7 @@ def campo_editable(label: str, value: str):
         border_color=DIVIDER,
         bgcolor=CARD_BG,
         text_size=13,
+        tooltip=tooltip,
         label_style=ft.TextStyle(
             size=11,
             color=TEXT_SECONDARY,
@@ -333,9 +388,9 @@ def campo_editable(label: str, value: str):
 
 
 def formulario_editar_empleado(page: ft.Page, emp, on_guardar=None, on_cancelar=None, on_error=None):
-    nombre_field = campo_editable("Nombre", emp.name)
-    apaterno_field = campo_editable("Apellido paterno", emp.aPaterno)
-    amaterno_field = campo_editable("Apellido materno", emp.aMaterno)
+    nombre_field = campo_editable("Nombre", emp.name, tooltip="Nombre del empleado")
+    apaterno_field = campo_editable("Apellido paterno", emp.aPaterno, tooltip="Apellido paterno del empleado")
+    amaterno_field = campo_editable("Apellido materno", emp.aMaterno, tooltip="Apellido materno del empleado")
 
     fecha_nac_field, fecha_box = campo_fecha(
         page,
@@ -344,8 +399,8 @@ def formulario_editar_empleado(page: ft.Page, emp, on_guardar=None, on_cancelar=
         if emp.fecha_nacimiento else "",
     )
 
-    telefono_field = campo_editable("Teléfono", emp.phone or "")
-    correo_field = campo_editable("Correo electrónico", emp.email)
+    telefono_field = campo_editable("Teléfono", emp.phone or "", tooltip="Ej. 222 468 1234")
+    correo_field = campo_editable("Correo electrónico", emp.email, tooltip="Ej. empleado@neusomic.com")
 
     rol_dropdown = ft.Dropdown(
         label="Rol",
@@ -434,8 +489,8 @@ def formulario_editar_empleado(page: ft.Page, emp, on_guardar=None, on_cancelar=
                     ],
                 ),
                 ft.Divider(height=1, color=DIVIDER),
-                ft.Row(controls=[nombre_field], spacing=10),
-                ft.Row(controls=[apaterno_field, amaterno_field], spacing=10),
+                ft.Row(controls=[nombre_field, apaterno_field], spacing=10),
+                ft.Row(controls=[amaterno_field, correo_field], spacing=10),
                 ft.Row(
                     controls=[
                         fecha_box,
@@ -443,8 +498,8 @@ def formulario_editar_empleado(page: ft.Page, emp, on_guardar=None, on_cancelar=
                     ],
                     spacing=10
                 ),
-                correo_field,
-                ft.Row(controls=[rol_dropdown, turno_dropdown], spacing=10),
+                #correo_field,
+                ft.Row(controls=[rol_dropdown, turno_dropdown], spacing=14),
                 activo_switch,
                 ft.Container(height=6),
                 ft.Row(
@@ -474,22 +529,27 @@ def formulario_editar_empleado(page: ft.Page, emp, on_guardar=None, on_cancelar=
 
 
 # ── Formulario de creación "Nuevo empleado" (modal) ─────────────────────────
-def campo_nuevo(label: str, hint: str, password: bool = False):
+def campo_nuevo(label: str, value: str = "", password: bool = False, tooltip: str = None, expand=True,):
     field = ft.TextField(
-        hint_text=hint,
+        label=label,
+        value=value,
         password=password,
         can_reveal_password=password,
+        width=250,
+        height=55,
         border_radius=8,
         border_color=DIVIDER,
         bgcolor=CARD_BG,
         text_size=13,
-        content_padding=ft.Padding.symmetric(horizontal=12, vertical=10),
-        expand=True,
+        tooltip=tooltip,
+        content_padding=ft.Padding.symmetric(horizontal=12, vertical=8),
+        #expand=True,
     )
 
     layout = ft.Column(
         spacing=4,
-        expand=True,
+        width=250,
+        #expand=True,
         controls=[
             ft.Text(label, size=12, color=TEXT_SECONDARY),
             field,
@@ -523,12 +583,6 @@ def campo_fecha(page: ft.Page, label: str, valor_inicial: str = ""):
 
     picker.on_change = fecha_seleccionada
 
-    # Registrar el picker en la página.
-    # ⚠️ Cada vez que se abre un modal con campo_fecha se crea un DatePicker
-    # nuevo y se agrega a page.overlay. Si nunca se limpia, se acumulan
-    # DatePickers "fantasma" en el overlay con cada apertura/cierre del modal.
-    # La limpieza correspondiente se hace en empleados_content._cerrar(),
-    # que remueve todos los DatePicker de page.overlay al cerrar el modal.
     page.overlay.append(picker)
 
     def abrir_fecha(e):
@@ -558,16 +612,16 @@ def campo_fecha(page: ft.Page, label: str, valor_inicial: str = ""):
 
 
 def formulario_nuevo_empleado(page: ft.Page, on_guardar=None, on_cancelar=None, on_error=None):
-    nombre_field, nombre_box = campo_nuevo("Nombres:", "Nombre")
-    apaterno_field, apaterno_box = campo_nuevo("Apellido paterno:", "Apellido paterno")
-    amaterno_field, amaterno_box = campo_nuevo("Apellido materno:", "Apellido materno")
-    correo_field, correo_box = campo_nuevo("Correo electrónico:", "ejemplo02@neusomic.com")
+    nombre_field, nombre_box = campo_nuevo("Nombres:", tooltip="Ej. Edgar Gael")
+    apaterno_field, apaterno_box = campo_nuevo("Apellido paterno:", tooltip="Ej. Hernández")
+    amaterno_field, amaterno_box = campo_nuevo("Apellido materno:", tooltip="Ej. García")
+    correo_field, correo_box = campo_nuevo("Correo electrónico:", tooltip="Ej. ejemplo02@neusomic.com")
     fecha_nac_field, fecha_nac_box = campo_fecha(
         page,
         "Fecha de nacimiento"
     )
-    telefono_field, telefono_box = campo_nuevo("Teléfono:", "222 468 1234")
-    password_field, password_box = campo_nuevo("Contraseña:", "Contraseña", password=True)
+    telefono_field, telefono_box = campo_nuevo("Teléfono:", tooltip="Ej. 222 468 1234")
+    password_field, password_box = campo_nuevo("Contraseña:", tooltip="Ej. Mínimo 8 caracteres, una mayúscula y un número", password=True)
 
     rol_dropdown = ft.Dropdown(
         label="Rol",
@@ -575,7 +629,8 @@ def formulario_nuevo_empleado(page: ft.Page, on_guardar=None, on_cancelar=None, 
         border_radius=8,
         border_color=DIVIDER,
         text_size=13,
-        label_style=ft.TextStyle(size=12, color=TEXT_SECONDARY),
+        tooltip="Selecciona el rol que tendrá el empleado",
+        label_style=ft.TextStyle(size=11, color=TEXT_SECONDARY),
         options=[ft.dropdown.Option(r) for r in ROLES_FILTRO],
     )
 
@@ -585,6 +640,7 @@ def formulario_nuevo_empleado(page: ft.Page, on_guardar=None, on_cancelar=None, 
         border_radius=8,
         border_color=DIVIDER,
         text_size=13,
+        tooltip="Selecciona el turno de trabajo del empleado",
         label_style=ft.TextStyle(size=12, color=TEXT_SECONDARY),
         options=[ft.dropdown.Option(t) for t in TURNOS],
     )
@@ -663,10 +719,10 @@ def formulario_nuevo_empleado(page: ft.Page, on_guardar=None, on_cancelar=None, 
                     ],
                 ),
                 ft.Divider(height=1, color=DIVIDER),
-                ft.Row(controls=[nombre_box, apaterno_box], spacing=14),
-                ft.Row(controls=[amaterno_box, correo_box], spacing=14),
-                ft.Row(controls=[fecha_nac_box, telefono_box], spacing=14),
-                password_box,
+                ft.Row(controls=[nombre_field, apaterno_field], spacing=14),
+                ft.Row(controls=[amaterno_field, correo_field], spacing=14),
+                ft.Row(controls=[fecha_nac_box, telefono_field], spacing=14),
+                password_field,
                 ft.Row(controls=[rol_dropdown, turno_dropdown], spacing=14),
                 ft.Container(height=6),
                 ft.Row(
@@ -780,7 +836,7 @@ def dialogo_dar_baja(emp, on_confirmar=None, on_cancelar=None):
 
 # ── Contenido de Empleados (área central + modal animado) ──────────────────
 def empleados_content(page: ft.Page, on_nuevo_empleado=None, on_ver_detalle=None):
-    empleados = EmpleadoDAO().get_all()
+    #empleados = EmpleadoDAO().get_all()
     notifications = NotificationManager(page)
 
     modal_overlay_ref = ft.Ref[ft.Container]()
@@ -788,24 +844,27 @@ def empleados_content(page: ft.Page, on_nuevo_empleado=None, on_ver_detalle=None
     modal_card_ref = ft.Ref[ft.Container]()
     tabla_wrapper_ref = ft.Ref[ft.Container]()
     contador_ref = ft.Ref[ft.Text]()
+    paginacion_ref = ft.Ref[ft.Container]()
+
+    ELEMENTOS_POR_PAGINA = 7
+    pagina_actual = 1
 
     busqueda_actual = ""
     rol_actual = None
 
-    def _toast(mensaje, tipo="normal"):
-        page.run_task(notifications.show, mensaje, tipo)
+    def obtener_lista_filtrada():
 
-    def actualizar_tabla():
         lista = EmpleadoDAO().get_all()
 
         if busqueda_actual:
-            texto = busqueda_actual.lower()
+            texto = busqueda_actual.lower().strip()
 
             lista = [
                 e for e in lista
-                if texto in e.name.lower()
-                   or texto in e.aPaterno.lower()
-                   or texto in e.email.lower()
+                if texto in (e.name or "").lower()
+                   or texto in (e.aPaterno or "").lower()
+                   or texto in (e.aMaterno or "").lower()
+                   or texto in (e.email or "").lower()
             ]
 
         if rol_actual:
@@ -814,35 +873,76 @@ def empleados_content(page: ft.Page, on_nuevo_empleado=None, on_ver_detalle=None
                 if ROLES_MAP.get(e.id_rol) == rol_actual
             ]
 
-        tabla_wrapper_ref.current.content = tabla_empleados(
-            lista,
-            manejar_click_fila
-        )
+        return lista
 
-        tabla_wrapper_ref.current.update()
+    def _toast(mensaje, tipo="normal"):
+        page.run_task(notifications.show, mensaje, tipo)
 
-        contador_ref.current.value = f"{len(lista)} elementos"
-        contador_ref.current.update()
+    def actualizar_tabla(actualizar_ui=True):
+        nonlocal pagina_actual
+
+        try:
+            lista = obtener_lista_filtrada()
+
+            total_elementos = len(lista)
+
+            total_paginas = max(
+                1,
+                (total_elementos + ELEMENTOS_POR_PAGINA - 1)
+                // ELEMENTOS_POR_PAGINA
+            )
+
+            if pagina_actual > total_paginas:
+                pagina_actual = total_paginas
+
+            inicio = (pagina_actual - 1) * ELEMENTOS_POR_PAGINA
+            fin = inicio + ELEMENTOS_POR_PAGINA
+
+            empleados_pagina = lista[inicio:fin]
+
+            # ACTUALIZAR CONTADOR
+            contador_ref.current.value = f"{total_elementos} elementos"
+
+            # ACTUALIZAR TABLA
+            tabla_wrapper_ref.current.content = tabla_empleados(
+                empleados_pagina,
+                on_ver_detalle=abrir_detalle
+            )
+
+            # ACTUALIZAR PAGINACIÓN
+            paginacion_ref.current.content = paginacion(
+                pagina_actual=pagina_actual,
+                total_paginas=total_paginas,
+                on_cambiar_pagina=cambiar_pagina,
+            )
+
+            if actualizar_ui:
+                tabla_wrapper_ref.current.update()
+                contador_ref.current.update()
+                paginacion_ref.current.update()
+
+        except Exception as ex:
+            import traceback
+            traceback.print_exc()
+            _toast(f"Error al cargar empleados: {ex}", "error")
 
     def _refrescar_lista():
         actualizar_tabla()
-        nuevos = EmpleadoDAO().get_all()
-        tabla_wrapper_ref.current.content = tabla_empleados(nuevos, manejar_click_fila)
-        tabla_wrapper_ref.current.update()
-        if contador_ref.current:
-            contador_ref.current.value = f"{len(nuevos)} elementos"
-            contador_ref.current.update()
 
     def buscar_empleado(e):
-        nonlocal busqueda_actual
+        nonlocal busqueda_actual, pagina_actual
 
         busqueda_actual = e.control.value
+        pagina_actual = 1
+
         actualizar_tabla()
 
     def aplicar_filtro(rol):
-        nonlocal rol_actual
+        nonlocal rol_actual, pagina_actual
 
-        rol_actual = rol
+        rol_actual = None if rol == "Todos" else rol
+        pagina_actual = 1
+
         actualizar_tabla()
 
     async def _swap_contenido(nuevo_control):
@@ -863,9 +963,6 @@ def empleados_content(page: ft.Page, on_nuevo_empleado=None, on_ver_detalle=None
         modal_overlay_ref.current.visible = False
         modal_overlay_ref.current.update()
 
-        # Limpieza de los DatePicker acumulados por campo_fecha() mientras
-        # el modal estuvo abierto (ver nota en campo_fecha). Se remueven
-        # todos para que no se acumulen en page.overlay entre aperturas.
         page.overlay[:] = [c for c in page.overlay if not isinstance(c, ft.DatePicker)]
         page.update()
 
@@ -883,6 +980,23 @@ def empleados_content(page: ft.Page, on_nuevo_empleado=None, on_ver_detalle=None
                 on_error=lambda msg: _toast(msg, "warning"),
             ),
         )
+
+    def cambiar_pagina(nueva_pagina):
+        nonlocal pagina_actual
+
+        lista = obtener_lista_filtrada()
+
+        total_paginas = max(
+            1,
+            (len(lista) + ELEMENTOS_POR_PAGINA - 1)
+            // ELEMENTOS_POR_PAGINA
+        )
+
+        pagina_actual = max(
+            1,
+            min(nueva_pagina, total_paginas)
+        )
+        actualizar_tabla()
 
     def ir_a_baja(emp):
         page.run_task(
@@ -902,9 +1016,6 @@ def empleados_content(page: ft.Page, on_nuevo_empleado=None, on_ver_detalle=None
         emp_actualizado.id_rol = datos["id_rol"]
         emp_actualizado.active = datos["active"]
 
-        # ⚠️ Pendiente conocido (no se toca en este cambio): EmpleadoDAO.update()
-        # vuelve a hashear password_hash, lo que rompe el login del empleado
-        # editado. Ver notas previas del proyecto.
         EmpleadoDAO().update(emp_actualizado)
 
         _toast("Empleado actualizado correctamente.", "success")
@@ -1019,7 +1130,7 @@ def empleados_content(page: ft.Page, on_nuevo_empleado=None, on_ver_detalle=None
                     ref=modal_backdrop_ref,
                     expand=True,
                     bgcolor=ft.Colors.with_opacity(0.65, "#000000"),  # más opaco para resaltar la tarjeta
-                    blur=10,  # efecto glass sobre el contenido de fondo
+                    blur=10,
                     opacity=0,
                     animate_opacity=ft.Animation(250, ft.AnimationCurve.EASE_OUT),
                     on_click=cerrar_modal,
@@ -1041,7 +1152,7 @@ def empleados_content(page: ft.Page, on_nuevo_empleado=None, on_ver_detalle=None
         ),
     )
 
-    return ft.Stack(
+    vista = ft.Stack(
         controls=[
             ft.Container(
                 expand=True,
@@ -1056,37 +1167,55 @@ def empleados_content(page: ft.Page, on_nuevo_empleado=None, on_ver_detalle=None
                             ],
                             spacing=12,
                         ),
+
                         ft.Container(height=12),
+
                         filtro_row(aplicar_filtro),
+
                         ft.Container(height=12),
+
                         ft.Row(
                             controls=[
                                 ft.Container(expand=True),
-                                ft.Text(f"{len(empleados)} elementos", size=12, color=TEXT_SECONDARY, ref=contador_ref),
+                                ft.Text(
+                                    "0 elementos",
+                                    size=12,
+                                    color=TEXT_SECONDARY,
+                                    ref=contador_ref,
+                                ),
                             ],
                         ),
+
                         ft.Container(height=20),
+
                         ft.Container(
                             ref=tabla_wrapper_ref,
                             expand=True,
-                            content=tabla_empleados(empleados, manejar_click_fila),
+                            content=ft.Container(),
                         ),
-                        ft.Row(
-                            controls=[paginacion(pagina_actual=1, total_paginas=6)],
-                            alignment=ft.MainAxisAlignment.CENTER,
+
+                        ft.Container(
+                            ref=paginacion_ref,
+                            content=ft.Container(),
                         ),
+
                         ft.Container(height=10),
                     ],
                     spacing=0,
                     expand=True,
                 ),
             ),
+
             boton_informacion(),
             modal_overlay,
             notifications.get_layer(),
         ],
         expand=True,
     )
+
+    actualizar_tabla(actualizar_ui=False)
+
+    return vista
 
 
 def empleados_admin(page: ft.Page, on_navigate=None, on_nuevo_empleado=None, on_ver_detalle=None, on_logout=None):
