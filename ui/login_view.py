@@ -358,10 +358,79 @@ def login_view(page: ft.Page) -> ft.View:
                 "error"
             )
 
+    def actualizar_tabs(tab_index):
+        color_inactivo = "#94A3B8"
+        fondo_inactivo = "transparent"
+
+        # ── Colores de cada sección ─────────────────────────────
+        color_ingresar = COLOR_AZUL_COBALTO
+        color_restablecer = COLOR_NARANJA_AMBAR
+        color_registrarse = COLOR_AZUL_CIELO_INTENSO
+
+        fondo_ingresar = "rgba(37, 99, 235, 0.18)"
+        fondo_restablecer = "rgba(245, 158, 11, 0.18)"
+        fondo_registrarse = "rgba(56, 189, 248, 0.18)"
+
+        # ── Ingresar ────────────────────────────────────────────
+        btn_tab_ingresar.style = ft.ButtonStyle(
+            color={
+                "": color_ingresar if tab_index == 0 else color_inactivo,
+                "hovered": color_ingresar
+            },
+            bgcolor={
+                "": fondo_ingresar if tab_index == 0 else fondo_inactivo,
+                "hovered": "rgba(37, 99, 235, 0.12)"
+            },
+            shape=ft.RoundedRectangleBorder(radius=8),
+            padding=ft.Padding(15, 8, 15, 8)
+        )
+
+        # ── Restablecer ─────────────────────────────────────────
+        btn_tab_restablecer.style = ft.ButtonStyle(
+            color={
+                "": color_restablecer if tab_index == 1 else color_inactivo,
+                "hovered": color_restablecer
+            },
+            bgcolor={
+                "": fondo_restablecer if tab_index == 1 else fondo_inactivo,
+                "hovered": "rgba(245, 158, 11, 0.12)"
+            },
+            shape=ft.RoundedRectangleBorder(radius=8),
+            padding=ft.Padding(15, 8, 15, 8)
+        )
+
+        # ── Registrarse ─────────────────────────────────────────
+        btn_tab_registrar.style = ft.ButtonStyle(
+            color={
+                "": color_registrarse if tab_index in (2, 3) else color_inactivo,
+                "hovered": color_registrarse
+            },
+            bgcolor={
+                "": fondo_registrarse if tab_index in (2, 3) else fondo_inactivo,
+                "hovered": "rgba(56, 189, 248, 0.12)"
+            },
+            shape=ft.RoundedRectangleBorder(radius=8),
+            padding=ft.Padding(15, 8, 15, 8)
+        )
 
     def switch_tab(tab_index):
         nonlocal current_tab
         current_tab = tab_index
+
+        identificadores = {
+            0: "login",
+            1: "restablecer",
+            2: "registro",
+            3: "registro_vulcanizadora"
+        }
+
+        page.login_section = identificadores.get (
+            tab_index,
+            "desconocido"
+        )
+
+        actualizar_tabs(tab_index)
+
         form_container.controls.clear()
         # ── Login ──────────────────────────────────────────────────────
         if tab_index == 0:
@@ -534,6 +603,7 @@ def login_view(page: ft.Page) -> ft.View:
     ], spacing=0)
 
     glass_card = ft.Container(
+        key="login",
         content=ft.Column(
             controls=[
                 title_text,
@@ -556,9 +626,9 @@ def login_view(page: ft.Page) -> ft.View:
         bgcolor="#1A1A1A",
         border=AERO_BORDER,
         border_radius=18,
-        padding=20,  # menos padding para que se vea compacto
-        width=400,  # ancho fijo
-        height=400,  # alto fijo
+        padding=20,
+        width=400,
+        height=400,
         alignment=ft.Alignment.CENTER,
         shadow=ft.BoxShadow(
             blur_radius=15,
@@ -658,6 +728,7 @@ def login_view(page: ft.Page) -> ft.View:
                         expand=True,
                         spacing=0
                     ),
+
 
                     notification_layer
 

@@ -72,10 +72,12 @@ async def main(page: ft.Page):
             )
 
         elif page.route == "/dashboard_vulcanizadora":
+            vulcanizadora_id = getattr(page, "vulcanizadora_id", None)
 
             page.views.append(
                 dashboard_vulcanizadora(
                     page,
+                    vulcanizadora_id,
                     on_navigate=navigate,
                     on_logout=logout
                 )
@@ -203,6 +205,28 @@ async def main(page: ft.Page):
             vulcanizadora_id = getattr(page, "vulcanizadora_id", None)
             page.views.append(
                 reportes_vulcanizadora(
+                    page,
+                    vulcanizadora_id,
+                    on_navigate=navigate,
+                    on_logout=logout
+                )
+            )
+
+        elif page.route == "/perfil":
+            vulcanizadora_id = getattr(page, "vulcanizadora_id", None)
+            page.views.append (
+                perfil_view(
+                    page,
+                    vulcanizadora_id,
+                    on_navigate=navigate,
+                    on_logout=logout
+                )
+            )
+
+        elif page.route == "/inventarioV":
+            vulcanizadora_id = getattr(page, "vulcanizadora_id", None)
+            page.views.append(
+                inventario_view(
                     page,
                     vulcanizadora_id,
                     on_navigate=navigate,

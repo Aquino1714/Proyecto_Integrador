@@ -59,41 +59,39 @@ class VulcanizadoraDAO:
         cursor.close()
         conn.close()
 
-
     def update(self, vulcanizadora):
         conn = Connect.get_connect()
         cursor = conn.cursor()
 
-        # Encriptar contraseña
-        password_hash = Security.hash_password(vulcanizadora.password_hash)
-
         sql = """
-            UPDATE vulcanizadoras
-            SET nombre = %s,
-                telefono = %s,
-                correo = %s,
-                responsable = %s,
-                direccion = %s,
-                activo = %s,
-                password_hash = %s
-            WHERE vulcanizadora_id = %s
-        """
+              UPDATE vulcanizadoras
+              SET nombre      = %s,
+                  telefono    = %s,
+                  correo      = %s,
+                  responsable = %s,
+                  direccion   = %s,
+                  activo      = %s
+              WHERE vulcanizadora_id = %s \
+              """
 
-        cursor.execute (sql, (
+        cursor.execute(sql, (
             vulcanizadora.nombre,
             vulcanizadora.telefono,
             vulcanizadora.correo,
             vulcanizadora.responsable,
             vulcanizadora.direccion,
             vulcanizadora.activo,
-            password_hash,
             vulcanizadora.vulcanizadora_id
         ))
 
         conn.commit()
+
+        actualizado = cursor.rowcount > 0
+
         cursor.close()
         conn.close()
 
+        return actualizado
 
     def delete(self, vulcanizadora_id):
         conn = Connect.get_connect()
@@ -123,6 +121,81 @@ class VulcanizadoraDAO:
             return 0
 
         return result[0]
+
+    def get_by_id(self, vulcanizadora_id):
+
+        conn = Connect.get_connect()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "SELECT * FROM vulcanizadoras WHERE vulcanizadora_id = %s",
+            (vulcanizadora_id,)
+        )
+
+        register = cursor.fetchone()
+
+        cursor.close()
+        conn.close()
+
+        if register is None:
+            return None
+
+        vulcanizadora = Vulcanizadora(
+            vulcanizadora_id=register[0],
+            nombre=register[1],
+            telefono=register[2],
+            correo=register[3],
+            responsable=register[4],
+            direccion=register[5],
+            activo=register[6],
+            fecha_registro=register[7],
+            password_hash=register[8]
+        )
+
+        return vulcanizadora
+
+    def get_password_hash(self, vulcanizadora_id):
+        conn = Connect.get_connect()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "SELECT password_hash FROM vulcanizadoras WHERE vulcanizadora_id = %s",
+            (vulcanizadora_id,)
+        )
+
+        result = cursor.fetchone()
+
+        cursor.close()
+        conn.close()
+
+        if result is None:
+            return None
+
+        return result[0]
+
+    def update_password(self, vulcanizadora_id, password_hash):
+        conn = Connect.get_connect()
+        cursor = conn.cursor()
+
+        sql = """
+              UPDATE vulcanizadoras
+              SET password_hash = %s
+              WHERE vulcanizadora_id = %s \
+              """
+
+        cursor.execute(sql, (
+            password_hash,
+            vulcanizadora_id
+        ))
+
+        conn.commit()
+
+        actualizado = cursor.rowcount > 0
+
+        cursor.close()
+        conn.close()
+
+        return actualizado
 
 
     def get_by_correo(self, correo):

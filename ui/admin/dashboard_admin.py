@@ -1,13 +1,60 @@
+from datetime import date
+
 import flet as ft
 
 from ui.colors import *
+from ui.notifications import NotificationManager
 from ui.admin.components import (
     stat_card,
-    bar_chart_widget,
-    pie_chart_widget,
-    orders_table_widget,
-    waste_reports_widget,
+    grafica_barras,
+    grafica_pastel,
+    lista_actividad_reciente,
 )
+
+from dao.empleado_dao import EmpleadoDAO
+from dao.transporte_dao import TransportDAO          # ← AJUSTAR si el path real es distinto
+from dao.reporteVul_dao import ReportVulDAO
+from dao.reportesEmp_dao import ReportsEmpDAO
+
+
+# ── Catálogos locales (duplicados a propósito, mismo patrón que el resto de
+#    los módulos admin, para evitar imports circulares con dashboard_admin) ──
+ROLES_MAP = {
+    1: "Administrador",
+    2: "Chofer",
+    3: "Recepcion",
+    4: "Almacen",
+    5: "Triturador",
+    6: "Distribucion",
+}
+
+ROL_COLORES = {
+    "Administrador": STAT_BLUE,
+    "Chofer": STAT_TEAL,
+    "Recepcion": STAT_ORANGE,
+    "Almacen": "#a855f7",
+    "Triturador": "#ef4444",
+    "Distribucion": "#eab308",
+}
+
+ESTADO_TRANSPORTE_COLORES = {
+    "Disponible": STAT_BLUE,
+    "En viaje": STAT_ORANGE,
+    "Mantenimiento": "#9ca3af",
+    "Fuera de servicio": "#ef4444",
+}
+
+ESTADO_DESECHO_COLORES = {
+    "Pendiente": STAT_ORANGE,
+    "Asignado": STAT_BLUE,
+    "Completado": STAT_TEAL,
+    "Cancelado": "#9ca3af",
+}
+
+ESTADO_EMP_COLORES = {
+    "Pendiente": STAT_ORANGE,
+    "Resuelto": STAT_TEAL,
+}
 
 
 # ── Sidebar ──────────────────────────────────────────────────────────────────
@@ -191,9 +238,6 @@ def about_dialog(page: ft.Page):
                         ),
                     ),
 
-                    # ─────────────────────────────────────────────────────
-                    # MISIÓN / VISIÓN
-                    # ─────────────────────────────────────────────────────
                     ft.Row(
                         controls=[
                             ft.Container(
@@ -269,9 +313,6 @@ def about_dialog(page: ft.Page):
                         spacing=12,
                     ),
 
-                    # ─────────────────────────────────────────────────────
-                    # SERVICIOS
-                    # ─────────────────────────────────────────────────────
                     ft.Row(
                         controls=[
                             ft.Icon(
@@ -414,9 +455,6 @@ def about_dialog(page: ft.Page):
                         ],
                     ),
 
-                    # ─────────────────────────────────────────────────────
-                    # PROCESO
-                    # ─────────────────────────────────────────────────────
                     ft.Container(
                         padding=16,
                         border_radius=10,
@@ -819,11 +857,8 @@ def about_dialog(page: ft.Page):
     return dialog
 
 
-
 # ── Top bar ──────────────────────────────────────────────────────────────────
 def topbar(page: ft.Page, active_route: str):
-    #dialog = about_dialog(page)
-
     TITULOS = {
         "/dashboard_admin": "Dashboard",
         "/usuarios": "Empleados",
@@ -880,49 +915,384 @@ def topbar(page: ft.Page, active_route: str):
     )
 
 
-
-
-# ── Stat cards row ───────────────────────────────────────────────────────────
-def stat_row():
-    return ft.Row(
-        controls=[
-            stat_card("Ingreso neumáticos", "4,850", "+12% vs mes anterior", STAT_ORANGE),
-            stat_card("Pedidos constructoras", "32", "Solicitudes recibidas", STAT_BLUE),
-            stat_card("Volumen pavimento", "28,400 Kg", "Producción actual", STAT_TEAL),
-            stat_card("Bajas de productos", "18", "Justificado por daño", STAT_PINK),
-        ],
-        spacing=12,
-        expand=True,
+def boton_informacion(on_click=None):
+    return ft.Container(
+        content=ft.IconButton(
+            icon=ft.Icons.INFO_OUTLINE,
+            icon_color="#ffffff",
+            icon_size=18,
+            tooltip="Saber más sobre nosotros",
+            style=ft.ButtonStyle(
+                bgcolor="transparent",
+                shape=ft.RoundedRectangleBorder(radius=50),
+                side=ft.BorderSide(width=2, color="#ffffff"),
+            ),
+            on_click=on_click,
+        ),
+        right=20,
+        bottom=20,
     )
 
 
-# ── Main dashboard view ──────────────────────────────────────────────────────
+# ── Obtención y agregación de datos ─────────────────────────────────────────
+def _obtener_metricas():
+    """
+    Consulta los DAOs y agrega la información necesaria para el dashboard.
+    Devuelve un dict con listas/contadores listos para renderizar.
+    Si alguna consulta falla, esa sección regresa vacía (no tumba el dashboard).
+    """
+    empleados, transportes, reportes_desecho, reportes_emp = [], [], [], []
+    errores = []
+
+    try:
+        empleados = EmpleadoDAO().get_all()
+    except Exception as ex:
+        errores.append(f"Empleados: {ex}")
+
+    try:
+        transportes = TransportDAO().get_all()
+    except Exception as ex:
+        errores.append(f"Transporte: {ex}")
+
+    try:
+        reportes_desecho = ReportVulDAO().get_all_admin()
+    except Exception as ex:
+        errores.append(f"Reportes de desecho: {ex}")
+
+    try:
+        reportes_emp = ReportsEmpDAO().get_all_admin()
+    except Exception as ex:
+        errores.append(f"Reportes de empleados: {ex}")
+
+    # ── Empleados ──
+    empleados_activos = [e for e in empleados if getattr(e, "active", False)]
+    empleados_inactivos = len(empleados) - len(empleados_activos)
+
+    conteo_por_rol = {rol: 0 for rol in ROLES_MAP.values()}
+    for e in empleados_activos:
+        rol = ROLES_MAP.get(getattr(e, "id_rol", None))
+        if rol:
+            conteo_por_rol[rol] += 1
+
+    # ── Transporte ──
+    conteo_transporte = {estado: 0 for estado in ESTADO_TRANSPORTE_COLORES}
+    for t in transportes:
+        estado = getattr(t, "estado", None)
+        if estado in conteo_transporte:
+            conteo_transporte[estado] += 1
+
+    # ── Reportes de desecho (vulcanizadoras) ──
+    conteo_desecho = {estado: 0 for estado in ESTADO_DESECHO_COLORES}
+    for r in reportes_desecho:
+        estado = getattr(r, "estado", None)
+        if estado in conteo_desecho:
+            conteo_desecho[estado] += 1
+
+    # ── Reportes internos de empleados ──
+    conteo_emp = {estado: 0 for estado in ESTADO_EMP_COLORES}
+    for r in reportes_emp:
+        estado = getattr(r, "estado", None)
+        if estado in conteo_emp:
+            conteo_emp[estado] += 1
+
+    return {
+        "empleados": empleados,
+        "empleados_activos": len(empleados_activos),
+        "empleados_inactivos": empleados_inactivos,
+        "conteo_por_rol": conteo_por_rol,
+        "transportes": transportes,
+        "conteo_transporte": conteo_transporte,
+        "reportes_desecho": reportes_desecho,
+        "conteo_desecho": conteo_desecho,
+        "reportes_emp": reportes_emp,
+        "conteo_emp": conteo_emp,
+        "errores": errores,
+    }
+
+
+def _mas_recientes(lista, campo_fecha="fecha_reporte", estado_prioritario="Pendiente", limite=5):
+    """Ordena priorizando el estado indicado y luego por fecha descendente."""
+    try:
+        prioritarios = [x for x in lista if getattr(x, "estado", None) == estado_prioritario]
+        resto = [x for x in lista if getattr(x, "estado", None) != estado_prioritario]
+
+        clave = lambda x: getattr(x, campo_fecha, None) or date.min
+        prioritarios = sorted(prioritarios, key=clave, reverse=True)
+        resto = sorted(resto, key=clave, reverse=True)
+        return (prioritarios + resto)[:limite]
+    except Exception:
+        return list(lista)[:limite]
+
+
+# ── Construcción del contenido del dashboard ────────────────────────────────
+def _construir_kpis(m: dict):
+    total_transportes = len(m["transportes"])
+    disponibles = m["conteo_transporte"].get("Disponible", 0)
+    en_viaje = m["conteo_transporte"].get("En viaje", 0)
+    mantenimiento = m["conteo_transporte"].get("Mantenimiento", 0)
+
+    pendientes_desecho = m["conteo_desecho"].get("Pendiente", 0)
+    asignados_desecho = m["conteo_desecho"].get("Asignado", 0)
+    completados_desecho = m["conteo_desecho"].get("Completado", 0)
+
+    pendientes_emp = m["conteo_emp"].get("Pendiente", 0)
+    resueltos_emp = m["conteo_emp"].get("Resuelto", 0)
+
+    return ft.Row(
+        spacing=14,
+        controls=[
+            stat_card(
+                titulo="Empleados activos",
+                valor=str(m["empleados_activos"]),
+                subtitulo=f"{m['empleados_inactivos']} dados de baja",
+                color=STAT_BLUE,
+                icon=ft.Icons.BADGE_OUTLINED,
+            ),
+            stat_card(
+                titulo="Flotilla disponible",
+                valor=f"{disponibles}/{total_transportes}",
+                subtitulo=f"{en_viaje} en viaje · {mantenimiento} en mantenimiento",
+                color=STAT_TEAL,
+                icon=ft.Icons.LOCAL_SHIPPING_OUTLINED,
+            ),
+            stat_card(
+                titulo="Reportes de desecho pendientes",
+                valor=str(pendientes_desecho),
+                subtitulo=f"{asignados_desecho} asignados · {completados_desecho} completados",
+                color=STAT_ORANGE,
+                icon=ft.Icons.DELETE_OUTLINED,
+            ),
+            stat_card(
+                titulo="Reportes internos pendientes",
+                valor=str(pendientes_emp),
+                subtitulo=f"{resueltos_emp} resueltos",
+                color="#ef4444",
+                icon=ft.Icons.ANALYTICS_OUTLINED,
+            ),
+        ],
+    )
+
+
+def _construir_graficas(m: dict, ir_a_transporte, ir_a_desechos):
+    categorias_rol = list(m["conteo_por_rol"].keys())
+    valores_rol = [m["conteo_por_rol"][r] for r in categorias_rol]
+    colores_rol = [ROL_COLORES.get(r, STAT_PINK) for r in categorias_rol]
+
+    grafica_empleados = grafica_barras(
+        titulo="Plantilla por rol",
+        subtitulo="Empleados activos",
+        categorias=categorias_rol,
+        valores=valores_rol,
+        colores=colores_rol,
+        icon=ft.Icons.GROUPS_OUTLINED,
+        icon_color=STAT_BLUE,
+    )
+
+    secciones_transporte = [
+        (estado, m["conteo_transporte"].get(estado, 0), color)
+        for estado, color in ESTADO_TRANSPORTE_COLORES.items()
+    ]
+    grafica_transporte = grafica_pastel(
+        titulo="Estado de la flotilla",
+        subtitulo="Distribución actual",
+        secciones=secciones_transporte,
+        icon=ft.Icons.LOCAL_SHIPPING_OUTLINED,
+        icon_color=STAT_TEAL,
+    )
+
+    secciones_desecho = [
+        (estado, m["conteo_desecho"].get(estado, 0), color)
+        for estado, color in ESTADO_DESECHO_COLORES.items()
+    ]
+    grafica_desecho = grafica_pastel(
+        titulo="Reportes de desecho",
+        subtitulo="Por estatus",
+        secciones=secciones_desecho,
+        icon=ft.Icons.RECYCLING_OUTLINED,
+        icon_color=STAT_ORANGE,
+    )
+
+    return ft.Row(
+        spacing=14,
+        vertical_alignment=ft.CrossAxisAlignment.START,
+        controls=[grafica_empleados, grafica_transporte, grafica_desecho],
+    )
+
+
+def _construir_actividad(m: dict, ir_a_desechos, ir_a_reportes):
+    recientes_desecho = _mas_recientes(m["reportes_desecho"], "fecha_reporte", "Pendiente")
+    items_desecho = [
+        {
+            "titulo": f"{getattr(r, 'vulcanizadora_nombre', '—')} · "
+                      f"{getattr(r, 'cantidad_llantas', 0)} neumáticos",
+            "subtitulo": f"Reportado: {getattr(r, 'fecha_reporte', '—')}",
+            "estado": getattr(r, "estado", "—"),
+            "color_estado": ESTADO_DESECHO_COLORES.get(getattr(r, "estado", None), STAT_ORANGE),
+        }
+        for r in recientes_desecho
+    ]
+
+    recientes_emp = _mas_recientes(m["reportes_emp"], "fecha_reporte", "Pendiente")
+    items_emp = [
+        {
+            "titulo": f"{getattr(r, 'asunto', '—')} — {getattr(r, 'empleado_nombre', '—')}",
+            "subtitulo": f"{getattr(r, 'rol_nombre', '—') or '—'} · {getattr(r, 'fecha_reporte', '—')}",
+            "estado": getattr(r, "estado", "—"),
+            "color_estado": ESTADO_EMP_COLORES.get(getattr(r, "estado", None), STAT_ORANGE),
+        }
+        for r in recientes_emp
+    ]
+
+    lista_desecho = lista_actividad_reciente(
+        titulo="Reportes de desecho recientes",
+        subtitulo="Vulcanizadoras · prioriza pendientes",
+        items=items_desecho,
+        icon=ft.Icons.DELETE_OUTLINED,
+        icon_color=STAT_ORANGE,
+        on_click_item=lambda item: ir_a_desechos(),
+        on_ver_todos=lambda e: ir_a_desechos(),
+        texto_vacio="No hay reportes de desecho registrados.",
+    )
+
+    lista_emp = lista_actividad_reciente(
+        titulo="Reportes internos recientes",
+        subtitulo="Choferes, recepción, almacén y trituración",
+        items=items_emp,
+        icon=ft.Icons.ANALYTICS_OUTLINED,
+        icon_color="#ef4444",
+        on_click_item=lambda item: ir_a_reportes(),
+        on_ver_todos=lambda e: ir_a_reportes(),
+        texto_vacio="No hay reportes internos registrados.",
+    )
+
+    return ft.Row(spacing=14, controls=[lista_desecho, lista_emp])
+
+
+# ── Contenido principal del dashboard ───────────────────────────────────────
+def dashboard_content(page: ft.Page, on_navigate=None):
+    notify = NotificationManager(page)
+
+    contenido_ref = ft.Ref[ft.Column]()
+
+    def ir_a(ruta):
+        if on_navigate:
+            page.run_task(on_navigate, ruta)
+
+    def ir_a_transporte():
+        ir_a("/transporte")
+
+    def ir_a_desechos():
+        ir_a("/desechos")
+
+    def ir_a_reportes():
+        ir_a("/reportes")
+
+    def _construir():
+        m = _obtener_metricas()
+
+        if m["errores"]:
+            page.run_task(
+                notify.show,
+                "No se pudieron cargar algunos datos del dashboard.",
+                "warning",
+            )
+
+        return [
+            _construir_kpis(m),
+            _construir_graficas(
+                m,
+                ir_a_transporte,
+                ir_a_desechos,
+            ),
+            _construir_actividad(
+                m,
+                ir_a_desechos,
+                ir_a_reportes,
+            ),
+            ft.Container(height=6),
+        ]
+
+    def actualizar(e=None):
+        contenido_ref.current.controls = _construir()
+        contenido_ref.current.update()
+
+    encabezado = ft.Row(
+        controls=[
+            ft.Column(
+                spacing=1,
+                tight=True,
+                controls=[
+                    ft.Text(
+                        "Resumen general",
+                        size=18,
+                        weight=ft.FontWeight.BOLD,
+                        color=TEXT_PRIMARY,
+                    ),
+                    ft.Text(
+                        "Vista consolidada de operaciones de Neusomic",
+                        size=12,
+                        color=TEXT_SECONDARY,
+                    ),
+                ],
+            ),
+            ft.Container(expand=True),
+            ft.OutlinedButton(
+                content=ft.Row(
+                    controls=[
+                        ft.Icon(
+                            ft.Icons.REFRESH,
+                            size=16,
+                            color=STAT_BLUE,
+                        ),
+                        ft.Text(
+                            "Actualizar",
+                            size=12,
+                            color=STAT_BLUE,
+                            weight=ft.FontWeight.W_600,
+                        ),
+                    ],
+                    spacing=6,
+                    tight=True,
+                ),
+                style=ft.ButtonStyle(
+                    color=STAT_BLUE,
+                    side=ft.BorderSide(1, STAT_BLUE),
+                    shape=ft.RoundedRectangleBorder(radius=8),
+                ),
+                on_click=actualizar,
+            ),
+        ],
+    )
+
+    contenido = ft.Column(
+        ref=contenido_ref,
+        spacing=16,
+        expand=True,
+        scroll=ft.ScrollMode.AUTO,
+        controls=_construir(),
+    )
+
+    return ft.Column(
+        spacing=16,
+        expand=True,
+        controls=[
+            encabezado,
+            contenido,
+        ],
+    )
+
+
+
+# ── Vista completa (Stack con botón de info + modal) ────────────────────────
 def dashboard_admin(page: ft.Page, on_navigate=None, on_logout=None):
     active_route = "/dashboard_admin"
 
     dialog = about_dialog(page)
 
     def open_about(e):
-        print("CLICK EN INFO")
-
         page.overlay.append(dialog)
         dialog.open = True
         page.update()
-
-
-    info_button = ft.Container(
-        content=ft.Icon(
-            ft.Icons.INFO_OUTLINE,
-            color="#ffffff",
-            size=18
-        ),
-        padding=8,
-        border_radius=18,
-        border=ft.Border.all(1, "#ffffff"),
-        ink=True,
-        tooltip="Saber más sobre nosotros",
-        on_click=open_about,
-    )
 
     content_area = ft.Stack(
         controls=[
@@ -930,40 +1300,9 @@ def dashboard_admin(page: ft.Page, on_navigate=None, on_logout=None):
                 expand=True,
                 padding=20,
                 bgcolor=MAIN_BG,
-                content=ft.Column(
-                    controls=[
-                        stat_row(),
-                        ft.Container(height=12),
-                        ft.Row(
-                            controls=[
-                                bar_chart_widget(),
-                                pie_chart_widget(),
-                            ],
-                            spacing=12,
-                            expand=True,
-                        ),
-                        ft.Container(height=12),
-                        ft.Row(
-                            controls=[
-                                orders_table_widget(),
-                                waste_reports_widget(),
-                            ],
-                            spacing=12,
-                            expand=True,
-                        ),
-                    ],
-                    spacing=0,
-                    scroll=ft.ScrollMode.AUTO,
-                    expand=True,
-                ),
+                content=dashboard_content(page, on_navigate=on_navigate),
             ),
-
-            # Botón abajo a la derecha del contenido
-            ft.Container(
-                content=info_button,
-                right=20,
-                bottom=20,
-            ),
+            boton_informacion(on_click=open_about),
         ],
         expand=True,
     )
@@ -978,7 +1317,7 @@ def dashboard_admin(page: ft.Page, on_navigate=None, on_logout=None):
                     topbar(page, active_route),
                     ft.Row(
                         controls=[
-                            sidebar(active_route=active_route, on_navigate=on_navigate, on_logout = on_logout),
+                            sidebar(active_route=active_route, on_navigate=on_navigate, on_logout=on_logout),
                             content_area,
                         ],
                         spacing=0,

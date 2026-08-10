@@ -1,3 +1,5 @@
 from .dashboard_vulcanizadora import dashboard_vulcanizadora
 from .solicitudesA_vulcanizadora import solicitud_apoyo
 from .solicitudes_vulcanizadora import reportes_vulcanizadora
+from .perfil import perfil_view
+from .inventario import inventario_view
